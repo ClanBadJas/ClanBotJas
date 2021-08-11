@@ -2,18 +2,20 @@ import os
 
 import discord
 import asyncio
-
+from basediscordbot import BaseDiscordBot
 from dotenv import load_dotenv
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
 VOICE_CATEGORY_ID = 873269868508635168
-class MyClient(discord.Client):
+
+
+class MyClient(BaseDiscordBot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.category = None
 
-    async def create_delete_channels(self):
+    async def autoscale(self):
         voice_channels = self.category.voice_channels
         template = voice_channels[-1]
         empty_channel = None
@@ -30,26 +32,29 @@ class MyClient(discord.Client):
         # delete all empty channels, excluding the first empty channel
         for voice_channel in delete_channels:
             await voice_channel.delete()
+            await self.log(f":arrows_clockwise: AutoScale:		Deleting empty channels. Now managing {len(self.category.voice_channels)} channel(s).")
 
         # If no empty channel exists, create a new one
         if empty_channel is None:
             empty_channel = await template.clone(name="Voice Channel")
+            await self.log(f":arrows_clockwise: AutoScale:		New channel created. Now managing {len(self.category.voice_channels)} channels.")
 
         # Make sure the empty channel is always last
         if self.category.voice_channels[-1] != empty_channel:
             await empty_channel.move(end=True)
 
     async def on_ready(self):
+        await super().on_ready()
         print('connected')
         self.category = self.get_channel(VOICE_CATEGORY_ID)
-        await self.create_delete_channels()
+        await self.autoscale()
         print('Ready!')
 
     # Dynamic channel creation bot
     async def on_voice_state_update(self, member, before, after):
         print("hoi")
         if before.channel != after.channel:
-            await self.create_delete_channels()
+            await self.autoscale()
         await self.on_member_update()
         # Make sure This is not an event within the same channel
 
@@ -73,7 +78,10 @@ class MyClient(discord.Client):
         for voice_channel in self.category.voice_channels:
             name = self.get_most_played_game(voice_channel)
             if voice_channel.name != name:
+                await self.log(f":twisted_rightwards_arrows: AutoRename:	Changed {voice_channel.name} to {name}.")
                 await voice_channel.edit(name=name)
+                await MyClient.on_ready(self)
+
 
 
 if __name__ == "__main__":

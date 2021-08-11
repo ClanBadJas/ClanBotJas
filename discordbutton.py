@@ -5,13 +5,14 @@ from discord_components import DiscordComponents, Button
 import os
 import json
 from dotenv import load_dotenv
+from basediscordbot import BaseDiscordBot
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
 GUILD_ID = int(os.getenv('GUILD_ID'))
 
 
-class MyClient(discord.Client):
+class MyClient(BaseDiscordBot):
     guild = None
     menu = {}
     role_map = {}
@@ -87,7 +88,8 @@ class MyClient(discord.Client):
         await channel.send(content=menujson["title"], components=buttons)
 
     async def on_ready(self):
-        print('Connected!')
+        await super().on_ready()
+        await self.log("Discord button bot is connected")
         self.guild = await self.fetch_guild(GUILD_ID)
         channel_cache = await self.guild.fetch_channels()
 
@@ -104,7 +106,7 @@ class MyClient(discord.Client):
                 channel = self.text_channel_map[menujson["channel_name"]]
                 await self.get_message_from_title(channel, menujson)
             f.close()
-        print("ready!")
+        await self.log("Discord button bot is ready")
 
     async def on_button_click(self, interaction):
         await self.toggle_role(interaction,  int(interaction.component.custom_id))
