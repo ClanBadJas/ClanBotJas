@@ -1,1 +1,1 @@
-# ClanBotJas
+ClanBotJas is the custom Discord bot built specifically for our Discord gaming community. It was originally built upon discord.js but has since been rewritten with discord.py. ClanBotjas has a few unique features, like automatically scaling voice channels (AutoScaler), automatic voice channel naming (AutoRename) and interaction (Button) based role administration for users.

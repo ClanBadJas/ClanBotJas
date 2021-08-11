@@ -102,7 +102,7 @@ class MyClient(discord.Client):
         else:
             for menujson in json.load(f):
                 channel = self.text_channel_map[menujson["channel_name"]]
-                await self.get_message_from_title(channel,menujson)
+                await self.get_message_from_title(channel, menujson)
             f.close()
         print("ready!")
 

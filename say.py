@@ -1,40 +1,32 @@
+# bot.py
 import os
+import random
 
-import discord
 from discord.ext import commands
-
 from dotenv import load_dotenv
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
-ANNOUNCEMENT_CHANNEL = int(os.getenv('ANNOUNCEMENT_CHANNEL'))
+ALLOW_ANNOUNCEMENT_ROLE = 873270271132454942
+bot = commands.Bot(command_prefix='!')
+
+def has_role(member, role_id):
+    for role in member.roles:
+        if role.id == role_id:
+            return True
+
+    return False
+
+@bot.command(name='say')
+async def say(ctx):
+    if has_role(ctx.author, ALLOW_ANNOUNCEMENT_ROLE):
+        await ctx.send(ctx.message.content[5:])
+        await ctx.message.delete()
+    else:
+        await ctx.send('You do not have permissions to use that command.')
 
 
-class Music(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
 
 
-    @commands.command()
-    async def say_channel(self, ctx, id: int, *, arg):
-        """Stops and disconnects the bot from voice"""
-        channel = bot.get_channel(id)
-        await channel.send(arg)
-
-    @commands.command()
-    async def say(self, ctx, *, arg):
-        """Stops and disconnects the bot from voice"""
-        channel = bot.get_channel(ANNOUNCEMENT_CHANNEL)
-        await channel.send(arg)
-
-
-bot = commands.Bot(command_prefix=commands.when_mentioned_or("."),
-                   description='Relatively simple music bot example')
-
-@bot.event
-async def on_ready():
-    print('Logged in as {0} ({0.id})'.format(bot.user))
-    print('------')
-
-bot.add_cog(Music(bot))
-bot.run(TOKEN)
+if __name__ == "__main__":
+    bot.run(TOKEN)
