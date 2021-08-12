@@ -1,19 +1,34 @@
-import os
-
 import discord
-import asyncio
-from basediscordbot import BaseDiscordBot
-from dotenv import load_dotenv
+from discord.ext import commands
 
-load_dotenv()
-TOKEN = os.getenv('TOKEN')
-VOICE_CATEGORY_ID = 873269868508635168
+import settings
 
 
-class MyClient(BaseDiscordBot):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.category = None
+class VoiceChannelBot(commands.Cog):
+    category = None
+    logChannel = None
+    initialized = False
+
+    def __init__(self, client):
+        self.client = client
+
+    async def initialize(self):
+        self.logChannel = self.client.get_channel(settings.LOG_CHANNEL)
+
+        await self.logChannel.send("Voice channel cog connected")
+        self.category = self.client.get_channel(settings.VOICE_CATEGORY_ID)
+        await self.autoscale()
+        await self.logChannel.send("Voice channel cog ready")
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        if not self.initialized:
+            await self.initialize()
+
+    @commands.Cog.listener()
+    async def on_command_completion(self, *args, **kwargs):
+        if not self.initialized:
+            await self.initialize()
 
     async def autoscale(self):
         voice_channels = self.category.voice_channels
@@ -28,29 +43,25 @@ class MyClient(BaseDiscordBot):
                     empty_channel = voice_channel
                 else:
                     delete_channels.append(voice_channel)
-
+        before_channel_count = len(self.category.voice_channels)
         # delete all empty channels, excluding the first empty channel
         for voice_channel in delete_channels:
             await voice_channel.delete()
-            await self.log(f":arrows_clockwise: AutoScale:		Deleting empty channels. Now managing {len(self.category.voice_channels)} channel(s).")
+            await self.logChannel.send(
+                f":arrows_clockwise: AutoScale:		Deleting empty channels. Now managing {before_channel_count - 1} channel(s).")
 
         # If no empty channel exists, create a new one
         if empty_channel is None:
             empty_channel = await template.clone(name="Voice Channel")
-            await self.log(f":arrows_clockwise: AutoScale:		New channel created. Now managing {len(self.category.voice_channels)} channels.")
+            await self.logChannel.send(
+                f":arrows_clockwise: AutoScale:		New channel created. Now managing {before_channel_count + 1} channels.")
 
         # Make sure the empty channel is always last
         if self.category.voice_channels[-1] != empty_channel:
             await empty_channel.move(end=True)
 
-    async def on_ready(self):
-        await super().on_ready()
-        print('connected')
-        self.category = self.get_channel(VOICE_CATEGORY_ID)
-        await self.autoscale()
-        print('Ready!')
-
     # Dynamic channel creation bot
+    @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         print("hoi")
         if before.channel != after.channel:
@@ -58,7 +69,8 @@ class MyClient(BaseDiscordBot):
         await self.on_member_update()
         # Make sure This is not an event within the same channel
 
-    def get_most_played_game(self, voice_channel):
+    @staticmethod
+    def get_most_played_game(voice_channel):
         games = {}
         for member in voice_channel.members:
             for activity in member.activities:
@@ -74,19 +86,16 @@ class MyClient(BaseDiscordBot):
                 highest_hitcount = value
                 highest_name = key
         return highest_name
+
+    @commands.Cog.listener()
     async def on_member_update(self, *args):
         for voice_channel in self.category.voice_channels:
             name = self.get_most_played_game(voice_channel)
             if voice_channel.name != name:
-                await self.log(f":twisted_rightwards_arrows: AutoRename:	Changed {voice_channel.name} to {name}.")
+                await self.logChannel.send(
+                    f":twisted_rightwards_arrows: AutoRename:	Changed {voice_channel.name} to {name}.")
                 await voice_channel.edit(name=name)
-                await MyClient.on_ready(self)
 
 
-
-if __name__ == "__main__":
-    intents = discord.Intents.default()
-    intents.presences = True
-    intents.members = True
-    client = MyClient(intents=intents)
-    client.run(TOKEN)
+def setup(client):
+    client.add_cog(VoiceChannelBot(client))

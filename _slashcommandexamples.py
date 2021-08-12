@@ -2,20 +2,17 @@ import os
 
 import discord
 from discord_slash import SlashCommand  # Importing the newly installed library.
-from dotenv import load_dotenv
+
 from discord_slash.utils.manage_commands import create_permission
 from discord_slash.model import SlashCommandPermissionType
 from discord_slash.utils.manage_commands import create_option
+import settings
 
-
-load_dotenv()
-TOKEN = os.getenv('TOKEN')
-GUILD_ID = int(os.getenv('GUILD_ID'))
-PERMISSION_ROLE_ID = 873270271132454942
+PERMISSION_ROLE_ID = 0
 
 client = discord.Client(intents=discord.Intents.all())
 slash = SlashCommand(client, sync_commands=True)  # Declares slash commands through the client.
-guild_ids = [GUILD_ID]  # Put your server ID in this array.
+guild_ids = [settings.GUILD_ID]  # Put your server ID in this array.
 
 
 @client.event
@@ -40,12 +37,13 @@ async def on_ready():
                  )
              ])
 async def _getuser(ctx, user):
-  await ctx.send(content=f"{user.id}")
+    await ctx.send(content=f"{user.id}")
+
 
 @slash.slash(name="say",
              description="print message",
              permissions={
-                 GUILD_ID: [
+                 settings.GUILD_ID: [
                      create_permission(PERMISSION_ROLE_ID, SlashCommandPermissionType.ROLE, True),
                  ]
              },
@@ -69,7 +67,5 @@ async def _getuser(ctx, channel, message):
     await ctx.send(content="Printed stuff", hidden=True)
 
 
-
-
 if __name__ == "__main__":
-    client.run(TOKEN)
+    client.run(settings.TOKEN)
