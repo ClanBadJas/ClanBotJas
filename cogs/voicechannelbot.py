@@ -23,11 +23,13 @@ class VoiceChannelBot(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         if not self.initialized:
+            self.initialized = True
             await self.initialize()
 
     @commands.Cog.listener()
     async def on_command_completion(self, *args, **kwargs):
         if not self.initialized:
+            self.initialized = True
             await self.initialize()
 
     async def autoscale(self):

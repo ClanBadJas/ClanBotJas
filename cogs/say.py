@@ -17,7 +17,13 @@ class Say(commands.Cog):
 
     @commands.command()
     async def say(self, ctx):
-        print("say commands")
+
+        arg = ctx.message.content[4:].strip() if len(ctx.message.content) > 4 else ''
+
+        if len(arg) == 0:
+            await ctx.send(f"{ctx.author.mention}, Please provide a valid message!")
+            return
+
         if ctx.author.guild_permissions.administrator:
             await ctx.send(ctx.message.content[5:])
             await ctx.message.delete()
