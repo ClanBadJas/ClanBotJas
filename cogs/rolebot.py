@@ -151,9 +151,8 @@ class RoleBot(commands.Cog):
 
     async def get_message_from_title(self, menujson):
         """
-
-        :param channel:
-        :param menujson:
+        Create the message and post it in the configured settings channel
+        :param menujson: The config file
         :return:
         """
         buttons = []
@@ -176,6 +175,12 @@ class RoleBot(commands.Cog):
         await channel.send(content=menujson["title"], components=buttons)
 
     async def toggle_role(self, interaction, role_id):
+        """
+        Toggle the role on the user and give feedback
+        :param interaction: The button that was clicked
+        :param role_id: ID of the toggled role
+        :return:
+        """
         member = await self.guild.fetch_member(interaction.user.id)
         role = self.menu[role_id][0]
         channel_name = self.menu[role_id][1]

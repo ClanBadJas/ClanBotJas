@@ -13,6 +13,10 @@ class VoiceChannelBot(commands.Cog):
         self.client = client
 
     async def initialize(self):
+        """
+        Initialize the bot
+        :return:
+        """
         self.logChannel = self.client.get_channel(settings.LOG_CHANNEL)
 
         await self.logChannel.send("Voice channel cog connected")
@@ -22,17 +26,63 @@ class VoiceChannelBot(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
+        """
+        Initialize the bot onready
+        :return:
+        """
         if not self.initialized:
             self.initialized = True
             await self.initialize()
 
     @commands.Cog.listener()
     async def on_command_completion(self, *args, **kwargs):
+        """
+        Initialize the bot when a command is completed (!load/!reload)
+        :param args:
+        :param kwargs:
+        :return:
+        """
         if not self.initialized:
             self.initialized = True
             await self.initialize()
 
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        """
+        Autoscale the app when before and after channel are triggered.
+        :param member: Not used
+        :param before: before channel state
+        :param after: after channel state
+        :return:
+        """
+        print("hoi")
+        if before.channel != after.channel:
+            await self.autoscale()
+        await self.on_member_update()
+        # Make sure This is not an event within the same channel
+
+    @commands.Cog.listener()
+    async def on_member_update(self, *args, **kwargs):
+        """
+        check if the user is playing a different game.
+        :param args:
+        :return:
+        """
+        for voice_channel in self.category.voice_channels:
+            name = self.get_most_played_game(voice_channel)
+            if voice_channel.name != name:
+                await self.logChannel.send(
+                    f":twisted_rightwards_arrows: AutoRename:	Changed {voice_channel.name} to {name}.")
+                await voice_channel.edit(name=name)
+
     async def autoscale(self):
+        """
+        Get all empty channels.
+        Delete  empty channels if there is more than one.
+        If no empty channels exist, create one
+        Manually create a channel if none exist
+        :return:
+        """
         voice_channels = self.category.voice_channels
         template = voice_channels[-1]
         empty_channel = None
@@ -49,8 +99,10 @@ class VoiceChannelBot(commands.Cog):
         # delete all empty channels, excluding the first empty channel
         for voice_channel in delete_channels:
             await voice_channel.delete()
+        if delete_channels:
+            delete_amount = len(delete_channels)
             await self.logChannel.send(
-                f":arrows_clockwise: AutoScale:		Deleting empty channels. Now managing {before_channel_count - 1} channel(s).")
+                f":arrows_clockwise: AutoScale:		Deleting empty channels. Now managing {before_channel_count - delete_amount} channel(s).")
 
         # If no empty channel exists, create a new one
         if empty_channel is None:
@@ -62,17 +114,13 @@ class VoiceChannelBot(commands.Cog):
         if self.category.voice_channels[-1] != empty_channel:
             await empty_channel.move(end=True)
 
-    # Dynamic channel creation bot
-    @commands.Cog.listener()
-    async def on_voice_state_update(self, member, before, after):
-        print("hoi")
-        if before.channel != after.channel:
-            await self.autoscale()
-        await self.on_member_update()
-        # Make sure This is not an event within the same channel
-
     @staticmethod
     def get_most_played_game(voice_channel):
+        """
+        Get the most played game in a channel and return its name
+        :param voice_channel: Voice channel
+        :return:
+        """
         games = {}
         for member in voice_channel.members:
             for activity in member.activities:
@@ -88,15 +136,6 @@ class VoiceChannelBot(commands.Cog):
                 highest_hitcount = value
                 highest_name = key
         return highest_name
-
-    @commands.Cog.listener()
-    async def on_member_update(self, *args):
-        for voice_channel in self.category.voice_channels:
-            name = self.get_most_played_game(voice_channel)
-            if voice_channel.name != name:
-                await self.logChannel.send(
-                    f":twisted_rightwards_arrows: AutoRename:	Changed {voice_channel.name} to {name}.")
-                await voice_channel.edit(name=name)
 
 
 def setup(client):

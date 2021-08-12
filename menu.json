@@ -9,7 +9,8 @@
                {"title":"team-fortress-2", "role":"tf2"},
                {"title":"pubg",            "role":"pubg"},
                {"title":"rainbow-siege",   "role":"rainbowsiege"},
-               {"title":"fallguys",        "role":"fallguys"}
+               {"title":"fallguys",        "role":"fallguys"},
+               {"title":"cod4",            "role":"cod4"}
             ]
          }
       ]
