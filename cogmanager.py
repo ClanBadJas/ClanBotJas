@@ -5,9 +5,11 @@ from discord.ext import commands
 from discord_components import DiscordComponents
 
 import settings
-
-client = commands.Bot(command_prefix="!")
-
+intents = discord.Intents.default()
+intents.members = True
+intents.typing = False
+intents.presences = True
+client = commands.Bot(command_prefix="!", intents=intents)
 
 @client.command()
 async def load(ctx, extension: str):

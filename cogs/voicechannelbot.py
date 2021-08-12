@@ -62,12 +62,14 @@ class VoiceChannelBot(commands.Cog):
         # Make sure This is not an event within the same channel
 
     @commands.Cog.listener()
-    async def on_member_update(self, *args, **kwargs):
+    async def on_member_update(self, before, after):
         """
         check if the user is playing a different game.
         :param args:
         :return:
         """
+        if before.activities == after.activities:
+            return
         for voice_channel in self.category.voice_channels:
             name = self.get_most_played_game(voice_channel)
             if voice_channel.name != name:
