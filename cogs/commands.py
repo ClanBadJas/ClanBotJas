@@ -1,9 +1,11 @@
+from math import floor
+
 import discord
 from discord.ext import commands
 import settings
 
 
-class Say(commands.Cog):
+class Commands(commands.Cog):
 
     def __init__(self, client):
         self.client = client
@@ -24,10 +26,16 @@ class Say(commands.Cog):
             await ctx.send(f"{ctx.author.mention}, Please provide a valid message!")
             return
 
-        if ctx.author.guild_permissions.administrator:
-            await ctx.send(ctx.message.content[5:])
-            await ctx.message.delete()
 
+        await ctx.send(ctx.message.content[5:])
+        await ctx.message.delete()
+
+    @commands.command()
+    async def ping(selfself, ctx):
+        msg = await ctx.send("Ping?")
+
+        latency = msg.created_at - ctx.message.created_at
+        await msg.edit(f"Pong! Latency is {floor(latency.total_seconds() * 1000)} ms. API Latency is {floor(ctx.bot.latency * 1000)} ms.")
 
 def setup(client):
-    client.add_cog(Say(client))
+    client.add_cog(Commands(client))
