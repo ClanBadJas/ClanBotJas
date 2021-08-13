@@ -15,33 +15,20 @@ intents.typing = False
 intents.presences = True
 client = commands.Bot(command_prefix="!", intents=intents)
 slash = SlashCommand(client, sync_commands=True, sync_on_cog_reload=True, override_type=True)
-guild_ids = [settings.GUILD_ID]
-choices = [
-    create_choice(name="rolebot", value="RoleBot"),
-    create_choice(name="commands", value="Commands"),
-    create_choice(name="voicechannelbot", value="VoiceChannelBot"),
-]
-permissions = {
-    settings.GUILD_ID: [
-        create_permission(settings.PERMISSION_ROLE_ID, SlashCommandPermissionType.ROLE, True),
-    ]
-}
 
 
 @slash.slash(name="load",
              description="load a cog",
-             guild_ids=guild_ids,
-             permissions=permissions,
+             guild_ids=settings.DISCORD_GUILD_IDS,
+             permissions=settings.DISCORD_COMMAND_PERMISSIONS,
              default_permission=False,
              options=[
-                 create_option(name="cog", description="Select Cog", option_type=3, required=True, choices=choices)
+                 create_option(name="cog", description="Select Cog", option_type=3, required=True, choices=settings.DISCORD_COGS)
              ])
 async def _load(ctx, cog: str):
     cog, className = cog.lower(), cog
     try:
-
         client.load_extension(f"cogs.{cog}")
-
         await ctx.send(f"loaded \"{cog}\"", hidden=True)
     except commands.errors.ExtensionAlreadyLoaded:
         await ctx.send(f"\"{cog}\" already loaded", hidden=True)
@@ -49,11 +36,11 @@ async def _load(ctx, cog: str):
 
 @slash.slash(name="unload",
              description="unload a cog",
-             guild_ids=guild_ids,
-             permissions=permissions,
+             guild_ids=settings.DISCORD_GUILD_IDS,
+             permissions=settings.DISCORD_COMMAND_PERMISSIONS,
              default_permission=False,
              options=[
-                 create_option(name="cog", description="Select Cog", option_type=3, required=True, choices=choices)
+                 create_option(name="cog", description="Select Cog", option_type=3, required=True, choices=settings.DISCORD_COGS)
              ])
 async def _unload(ctx, cog: str):
     cog, className = cog.lower(), cog
@@ -66,11 +53,11 @@ async def _unload(ctx, cog: str):
 
 @slash.slash(name="reload",
              description="reload a cog",
-             guild_ids=guild_ids,
-             permissions=permissions,
+             guild_ids=settings.DISCORD_GUILD_IDS,
+             permissions=settings.DISCORD_COMMAND_PERMISSIONS,
              default_permission=False,
              options=[
-                 create_option(name="cog", description="Select Cog", option_type=3, required=True, choices=choices)
+                 create_option(name="cog", description="Select Cog", option_type=3, required=True, choices=settings.DISCORD_COGS)
              ])
 async def _reload(ctx, cog: str):
     cog, className = cog.lower(), cog
@@ -91,4 +78,4 @@ if __name__ == "__main__":
             client.load_extension(f'cogs.{filename[:-3]}')
 
     DiscordComponents(client)
-    client.run(settings.TOKEN)
+    client.run(settings.DISCORD_TOKEN)

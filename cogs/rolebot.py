@@ -25,9 +25,9 @@ class RoleBot(commands.Cog):
         Create all settings messages with the buttons attached.
         :return:
         """
-        self.log_channel = self.client.get_channel(settings.LOG_CHANNEL)
+        self.log_channel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
         await self.log_channel.send("Discord button cog connected")
-        self.guild = await self.client.fetch_guild(settings.GUILD_ID)
+        self.guild = await self.client.fetch_guild(settings.DISCORD_GUILD_ID)
         channel_cache = await self.guild.fetch_channels()
 
         # Create maps

@@ -1,14 +1,27 @@
 import os
 
+from discord_slash.model import SlashCommandPermissionType
+from discord_slash.utils.manage_commands import create_choice, create_permission
 from dotenv import load_dotenv
 
 load_dotenv()
-GUILD_ID = int(os.getenv('GUILD_ID'))
-TOKEN = os.getenv('TOKEN')
-VOICE_CATEGORY_ID = int(os.getenv('VOICE_CATEGORY_ID'))
-LOG_CHANNEL = int(os.getenv('LOG_CHANNEL'))
-ALLOW_ANNOUNCEMENT_ROLE = int(os.getenv('ALLOW_ANNOUNCEMENT_ROLE'))
+DISCORD_GUILD_ID = int(os.getenv('DISCORD_GUILD_ID'))
+DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+DISCORD_VOICE_CHANNEL_BOT_ID = int(os.getenv('DISCORD_VOICE_CHANNEL_BOT_ID'))
+DISCORD_LOG_CHANNEL = int(os.getenv('DISCORD_LOG_CHANNEL'))
+DISCORD_ROLEBOT_SETTINGS_CHANNEL = int(os.getenv('DISCORD_ROLEBOT_SETTINGS_CHANNEL'))
 
+DISCORD_GUILD_IDS = [DISCORD_GUILD_ID]
 
-PERMISSION_ROLE_ID = 875489052663611402
-DISCORD_ROLEBOT_SETTINGS_CHANNEL = 873269921264594984
+DISCORD_COGS = [
+    create_choice(name="rolebot", value="RoleBot"),
+    create_choice(name="commands", value="Commands"),
+    create_choice(name="voicechannelbot", value="VoiceChannelBot"),
+]
+
+DISCORD_COMMAND_PERMISSION_ROLE = int(os.getenv('DISCORD_COMMAND_PERMISSION_ROLE'))
+DISCORD_COMMAND_PERMISSIONS = {
+    DISCORD_GUILD_ID: [
+        create_permission(DISCORD_COMMAND_PERMISSION_ROLE, SlashCommandPermissionType.ROLE, True),
+    ]
+}

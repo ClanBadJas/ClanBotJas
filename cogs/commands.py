@@ -16,23 +16,15 @@ class Commands(commands.Cog):
         self.client = client
     @commands.Cog.listener()
     async def on_ready(self):
-        await self.client.get_channel(settings.LOG_CHANNEL).send("Command cog connected and ready")
-
-
-    @staticmethod
-    def has_role(member, role_id):
-        for role in member.roles:
-            if role.id == role_id:
-                return True
-        return False
+        await self.client.get_channel(settings.DISCORD_LOG_CHANNEL).send("Command cog connected and ready")
 
     @commands.command()
     async def say(self, ctx):
-        logChannel = self.client.get_channel(settings.LOG_CHANNEL)
+        logChannel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
         if not ctx.guild:
             await ctx.send("Commando only works in a guild")
             return
-        if ctx.guild.id != settings.GUILD_ID:
+        if ctx.guild.id != settings.DISCORD_GUILD_ID:
             return
         if not ctx.author.guild_permissions.administrator:
             await ctx.send(f"{ctx.author.mention}, You do not have permissions to use that command.", hidden=True)
@@ -54,8 +46,8 @@ class Commands(commands.Cog):
 
     @cog_ext.cog_slash(name="ping",
                        description="send ping",
-                       guild_ids=cogmanager.guild_ids,
-                       permissions=cogmanager.permissions,
+                       guild_ids=settings.DISCORD_GUILD_IDS,
+                       permissions=settings.DISCORD_COMMAND_PERMISSIONS,
                        default_permission=False, )
     async def ping(self, ctx: SlashContext):
         msg = await ctx.send("Ping?")
@@ -66,8 +58,8 @@ class Commands(commands.Cog):
 
     @cog_ext.cog_slash(name="getid",
                        description="get your user ID",
-                       guild_ids=cogmanager.guild_ids)
-    async def _getid(self, ctx: SlashContext,):
+                       guild_ids=settings.DISCORD_GUILD_IDS)
+    async def _getid(self, ctx: SlashContext):
         await ctx.send(content=f"Your id is: {ctx.author.id}", hidden=True)
 
 
@@ -107,9 +99,9 @@ class Commands(commands.Cog):
         return True
 
     @cog_ext.cog_subcommand(base="rolebot", name="add",
-                            guild_ids=cogmanager.guild_ids,
+                            guild_ids=settings.DISCORD_GUILD_IDS,
                             base_default_permission=False,
-                            base_permissions=cogmanager.permissions,
+                            base_permissions=settings.DISCORD_COMMAND_PERMISSIONS,
                             options=[
                                 create_option(name="category_name", description="#stuff", option_type=3, required=True),
                                 create_option(name="channel_name", description="#stuff", option_type=3, required=True),
@@ -130,9 +122,9 @@ class Commands(commands.Cog):
 
 
     @cog_ext.cog_subcommand(base="rolebot", name="delete",
-                            guild_ids=cogmanager.guild_ids,
+                            guild_ids=settings.DISCORD_GUILD_IDS,
                             base_default_permission=False,
-                            base_permissions=cogmanager.permissions,
+                            base_permissions=settings.DISCORD_COMMAND_PERMISSIONS,
                             options=[
                                 create_option(name="channel_name", description="#stuff", option_type=3, required=True)
                             ])
@@ -153,9 +145,9 @@ class Commands(commands.Cog):
             await ctx.send(f"Could not find \"{channel_name}\"", hidden=True)
 
     @cog_ext.cog_subcommand(base="rolebot", name="show",
-                            guild_ids=cogmanager.guild_ids,
+                            guild_ids=settings.DISCORD_GUILD_IDS,
                             base_default_permission=False,
-                            base_permissions=cogmanager.permissions,)
+                            base_permissions=settings.DISCORD_COMMAND_PERMISSIONS, )
     async def show(self, ctx: SlashContext):
         pretty_json = json.dumps(self.openMenu(), indent=4)
         await ctx.send(f"```{pretty_json}```", hidden=True)

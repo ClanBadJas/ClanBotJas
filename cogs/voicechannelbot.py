@@ -18,10 +18,10 @@ class VoiceChannelBot(commands.Cog):
         Initialize the bot onready
         :return:
         """
-        self.logChannel = self.client.get_channel(settings.LOG_CHANNEL)
+        self.logChannel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
 
         await self.logChannel.send("Voice channel cog connected")
-        self.category = self.client.get_channel(settings.VOICE_CATEGORY_ID)
+        self.category = self.client.get_channel(settings.DISCORD_VOICE_CHANNEL_BOT_ID)
         await self.autoscale()
         await self.logChannel.send("Voice channel cog ready")
 
