@@ -152,7 +152,13 @@ class Commands(commands.Cog):
         else:
             await ctx.send(f"Could not find \"{channel_name}\"", hidden=True)
 
-
+    @cog_ext.cog_subcommand(base="rolebot", name="show",
+                            guild_ids=cogmanager.guild_ids,
+                            base_default_permission=False,
+                            base_permissions=cogmanager.permissions,)
+    async def show(self, ctx: SlashContext):
+        pretty_json = json.dumps(self.openMenu(), indent=4)
+        await ctx.send(f"```{pretty_json}```", hidden=True)
 
 def setup(client):
     client.add_cog(Commands(client))
