@@ -6,7 +6,6 @@ from discord.ext import commands
 from discord_slash import SlashContext, cog_ext
 from discord_slash.utils.manage_commands import create_option
 
-import cogmanager
 import settings
 
 
@@ -14,9 +13,10 @@ class Commands(commands.Cog):
 
     def __init__(self, client):
         self.client = client
+
     @commands.Cog.listener()
     async def on_ready(self):
-        await self.client.get_channel(settings.DISCORD_LOG_CHANNEL).send("Command cog connected and ready")
+        await self.client.get_channel(settings.DISCORD_LOG_CHANNEL).send("Command cog ready")
 
     @commands.command()
     async def say(self, ctx):
@@ -62,9 +62,8 @@ class Commands(commands.Cog):
     async def _getid(self, ctx: SlashContext):
         await ctx.send(content=f"Your id is: {ctx.author.id}", hidden=True)
 
-
     @staticmethod
-    def openMenu():
+    def open_menu():
         try:
             f = open('menu.json', 'r')
         except IOError:
@@ -75,7 +74,7 @@ class Commands(commands.Cog):
             return menu
 
     @staticmethod
-    def syncMenu(menu):
+    def sync_menu(menu):
         with open('menu.json', 'w', encoding='utf-8') as f:
             json.dump(menu, f, ensure_ascii=True, indent=4)
 
@@ -90,7 +89,7 @@ class Commands(commands.Cog):
         return category
 
     @staticmethod
-    def get_or_creat_text_channel(category, channel_name, role_name):
+    def get_or_create_text_channel(category, channel_name, role_name):
         for channel in category["channels"]:
             if channel["title"] == channel_name:
                 return False
@@ -110,11 +109,11 @@ class Commands(commands.Cog):
     async def add(self, ctx: SlashContext, category_name, channel_name, role_name=None):
         if not role_name:
             role_name = channel_name
-        menu = self.openMenu()
-        category =self.get_or_create_category(menu, category_name)
-        modified = self.get_or_creat_text_channel(category, channel_name, role_name)
+        menu = self.open_menu()
+        category = self.get_or_create_category(menu, category_name)
+        modified = self.get_or_create_text_channel(category, channel_name, role_name)
         if modified:
-            self.syncMenu(menu)
+            self.sync_menu(menu)
             await ctx.send(f"created \"{channel_name}\"", hidden=True)
         else:
             await ctx.send(f"\"{channel_name}\" already exists", hidden=True)
@@ -130,7 +129,7 @@ class Commands(commands.Cog):
                             ])
     async def delete(self, ctx: SlashContext, channel_name):
         modified = False
-        menu = self.openMenu()
+        menu = self.open_menu()
 
         for category in menu:
             channels = list(filter(lambda channel: channel['title'] != channel_name, category["channels"]))
@@ -139,7 +138,7 @@ class Commands(commands.Cog):
                 category["channels"] = channels
 
         if modified:
-            self.syncMenu(menu)
+            self.sync_menu(menu)
             await ctx.send(f"deleted \"{channel_name}\"", hidden=True)
         else:
             await ctx.send(f"Could not find \"{channel_name}\"", hidden=True)
@@ -149,7 +148,7 @@ class Commands(commands.Cog):
                             base_default_permission=False,
                             base_permissions=settings.DISCORD_COMMAND_PERMISSIONS, )
     async def show(self, ctx: SlashContext):
-        pretty_json = json.dumps(self.openMenu(), indent=4)
+        pretty_json = json.dumps(self.open_menu(), indent=4)
         await ctx.send(f"```{pretty_json}```", hidden=True)
 
 def setup(client):

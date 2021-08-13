@@ -19,8 +19,6 @@ class VoiceChannelBot(commands.Cog):
         :return:
         """
         self.logChannel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
-
-        await self.logChannel.send("Voice channel cog connected")
         self.category = self.client.get_channel(settings.DISCORD_VOICE_CHANNEL_BOT_ID)
         await self.autoscale()
         await self.logChannel.send("Voice channel cog ready")

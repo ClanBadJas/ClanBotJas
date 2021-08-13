@@ -26,7 +26,6 @@ class RoleBot(commands.Cog):
         :return:
         """
         self.log_channel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
-        await self.log_channel.send("Discord button cog connected")
         self.guild = await self.client.fetch_guild(settings.DISCORD_GUILD_ID)
         channel_cache = await self.guild.fetch_channels()
 
@@ -42,13 +41,21 @@ class RoleBot(commands.Cog):
         else:
             # create text settings text messages.
             for menujson in json.load(f):
-                await self.get_message_from_title(menujson)
+                await self.create_rolebot_messages(menujson)
             f.close()
         await self.log_channel.send("Discord button cog ready")
 
     @commands.Cog.listener()
     async def on_button_click(self, interaction):
-        await self.toggle_role(interaction, int(interaction.component.custom_id))
+        role_id = int(interaction.component.custom_id)
+        member = await self.guild.fetch_member(interaction.user.id)
+        role, channel_name = self.menu[role_id]
+        if role in member.roles:
+            await member.remove_roles(role)
+            await interaction.respond(content=f"{channel_name} is onzichtbaar")
+        else:
+            await member.add_roles(role)
+            await interaction.respond(content=f"{channel_name} is zichtbaar")
 
     async def init_category_map(self, channels):
         """
@@ -79,7 +86,7 @@ class RoleBot(commands.Cog):
             if channel.type == discord.ChannelType.text:
                 self.text_channel_map[channel.name] = channel
 
-    async def get_category(self, category_name):
+    async def get_or_create_category(self, category_name):
         """
         Get a category by name
         :param category_name: category name
@@ -90,7 +97,7 @@ class RoleBot(commands.Cog):
         else:
             return await self.guild.create_category_channel(category_name)
 
-    async def get_role(self, role_name):
+    async def get_or_create_role(self, role_name):
         """
         Get a role by name
         :param role_name: role name
@@ -129,15 +136,15 @@ class RoleBot(commands.Cog):
         :return:
         """
 
-        category = await self.get_category(menujson["title"])
+        category = await self.get_or_create_category(menujson["title"])
 
         for text_channel_json in menujson["channels"]:
-            role = await self.get_role(text_channel_json["role"])
+            role = await self.get_or_create_role(text_channel_json["role"])
             await self.get_or_create_text_channel(text_channel_json["title"], category, role)
 
             yield role, "#" + text_channel_json["title"]
 
-    async def get_message_from_title(self, menujson):
+    async def create_rolebot_messages(self, menujson):
         """
         Create the message and post it in the configured settings channel
         :param menujson: The config file
@@ -164,23 +171,6 @@ class RoleBot(commands.Cog):
                 return
 
         await channel.send(content=title, components=buttons)
-
-    async def toggle_role(self, interaction, role_id):
-        """
-        Toggle the role on the user and give feedback
-        :param interaction: The button that was clicked
-        :param role_id: ID of the toggled role
-        :return:
-        """
-        member = await self.guild.fetch_member(interaction.user.id)
-        role = self.menu[role_id][0]
-        channel_name = self.menu[role_id][1]
-        if role in member.roles:
-            await member.remove_roles(role)
-            await interaction.respond(content=f"{channel_name} is onzichtbaar")
-        else:
-            await member.add_roles(role)
-            await interaction.respond(content=f"{channel_name} is zichtbaar")
 
 
 def setup(client):
