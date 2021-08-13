@@ -12,9 +12,10 @@ class VoiceChannelBot(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    async def initialize(self):
+    @commands.Cog.listener()
+    async def on_ready(self):
         """
-        Initialize the bot
+        Initialize the bot onready
         :return:
         """
         self.logChannel = self.client.get_channel(settings.LOG_CHANNEL)
@@ -23,28 +24,6 @@ class VoiceChannelBot(commands.Cog):
         self.category = self.client.get_channel(settings.VOICE_CATEGORY_ID)
         await self.autoscale()
         await self.logChannel.send("Voice channel cog ready")
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        """
-        Initialize the bot onready
-        :return:
-        """
-        if not self.initialized:
-            self.initialized = True
-            await self.initialize()
-
-    @commands.Cog.listener()
-    async def on_command_completion(self, *args, **kwargs):
-        """
-        Initialize the bot when a command is completed (!load/!reload)
-        :param args:
-        :param kwargs:
-        :return:
-        """
-        if not self.initialized:
-            self.initialized = True
-            await self.initialize()
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):

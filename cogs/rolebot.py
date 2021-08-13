@@ -15,28 +15,12 @@ class RoleBot(commands.Cog):
     category_map = {}
     text_channel_map = {}
     log_channel = None
-    initialized = False
 
     def __init__(self, client):
         self.client = client
 
     @commands.Cog.listener()
     async def on_ready(self):
-        if not self.initialized:
-            self.initialized = True
-            await self.initialize()
-
-    @commands.Cog.listener()
-    async def on_command_completion(self, *args, **kwargs):
-        if not self.initialized:
-            self.initialized = True
-            await self.initialize()
-
-    @commands.Cog.listener()
-    async def on_button_click(self, interaction):
-        await self.toggle_role(interaction, int(interaction.component.custom_id))
-
-    async def initialize(self):
         """
         Create all settings messages with the buttons attached.
         :return:
@@ -61,6 +45,10 @@ class RoleBot(commands.Cog):
                 await self.get_message_from_title(menujson)
             f.close()
         await self.log_channel.send("Discord button cog ready")
+
+    @commands.Cog.listener()
+    async def on_button_click(self, interaction):
+        await self.toggle_role(interaction, int(interaction.component.custom_id))
 
     async def init_category_map(self, channels):
         """
@@ -140,14 +128,14 @@ class RoleBot(commands.Cog):
         :param menujson: Menu json
         :return:
         """
-        for category_json in menujson["categories"]:
-            category = await self.get_category(category_json["title"])
 
-            for text_channel_json in category_json["channels"]:
-                role = await self.get_role(text_channel_json["role"])
-                await self.get_or_create_text_channel(text_channel_json["title"], category, role)
+        category = await self.get_category(menujson["title"])
 
-                yield role, "#" + text_channel_json["title"]
+        for text_channel_json in menujson["channels"]:
+            role = await self.get_role(text_channel_json["role"])
+            await self.get_or_create_text_channel(text_channel_json["title"], category, role)
+
+            yield role, "#" + text_channel_json["title"]
 
     async def get_message_from_title(self, menujson):
         """
@@ -155,24 +143,27 @@ class RoleBot(commands.Cog):
         :param menujson: The config file
         :return:
         """
-        buttons = []
-        i = 0
-        channel = self.text_channel_map[menujson["channel_name"]]
-        new_message_content = menujson["title"] + "\n"
+        buttons = [[]]
+
+        channel = self.client.get_channel(settings.DISCORD_ROLEBOT_SETTINGS_CHANNEL)
+        title = "> " + menujson["title"]
+
         async for role, channel_name in self.create_channels(menujson):
-            if i % 5 == 0:
+            if len(buttons[-1]) > 4:
                 buttons.append([])
 
             self.menu[role.id] = (role, channel_name,)
-            buttons[i // 5].append(Button(label=channel_name, custom_id=role.id))
-            i += 1
+            buttons[-1].append(Button(label=channel_name, custom_id=role.id))
+
+        if len(buttons[0]) == 0:
+            buttons = []
 
         async for message in channel.history():
-            if menujson["title"] in message.content:
-                await message.edit(content=new_message_content, components=buttons)
+            if title in message.content:
+                await message.edit(content=title, components=buttons)
                 return
 
-        await channel.send(content=menujson["title"], components=buttons)
+        await channel.send(content=title, components=buttons)
 
     async def toggle_role(self, interaction, role_id):
         """
