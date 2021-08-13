@@ -34,7 +34,6 @@ class VoiceChannelBot(commands.Cog):
         :param after: after channel state
         :return:
         """
-        print("hoi")
         if before.channel != after.channel:
             await self.autoscale()
         await self.on_member_update()
