@@ -9,11 +9,8 @@ from discord_slash.utils.manage_commands import create_option, create_choice, cr
 
 import settings
 
-intents = discord.Intents.default()
-intents.members = True
-intents.typing = False
-intents.presences = True
-client = commands.Bot(command_prefix="!", intents=intents)
+
+client = commands.Bot(command_prefix="!", intents=settings.INTENTS)
 slash = SlashCommand(client, sync_commands=True, sync_on_cog_reload=True, override_type=True)
 
 
