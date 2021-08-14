@@ -73,9 +73,8 @@ async def _reload(ctx, cog: str):
 
 
 if __name__ == "__main__":
-    for filename in os.listdir('./cogs'):
-        if filename.endswith(".py") and '__init__' not in filename:
-            client.load_extension(f'cogs.{filename[:-3]}')
-
+    for cog in settings.DISCORD_COGS:
+        client.load_extension(f'cogs.{cog["name"]}')
+        pass
     DiscordComponents(client)
     client.run(settings.DISCORD_TOKEN)
