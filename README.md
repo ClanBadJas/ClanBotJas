@@ -23,6 +23,7 @@ After reloading the rolebot, the actual TextChannel and Role will be created and
 On start or reload, the rolebot will walk through `menu.json` and create any TextChannel plus Role combination that's not present in the Discord server. Existing entries will not be adjusted and are skipped to avoid destruction of manual configurations in the server. 
 
 Slash commands to manage the rolebot:
+
 `/rolebot add` - Add a new TextChannel and Role to the server.
 
 `/rolebot delete` - Remove a TextChannel and Role from the server.
