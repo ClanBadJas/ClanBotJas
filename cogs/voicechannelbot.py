@@ -44,11 +44,14 @@ class VoiceChannelBot(commands.Cog):
         :param args:
         :return:
         """
-        if not before or not after:
+        if not before or not before.voice or not before.voice.channel:
+            return
+        if not after or not after.voice or not after.voice.channel:
             return
         if before.activities == after.activities:
             return
-        for voice_channel in self.category.voice_channels:
+
+        for voice_channel in {before.voice.channel, after.voice.channel}:
             name = self.get_most_played_game(voice_channel)
             if voice_channel.name != name:
                 await self.logChannel.send(

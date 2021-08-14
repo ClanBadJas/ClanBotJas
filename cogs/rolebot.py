@@ -39,6 +39,7 @@ class RoleBot(commands.Cog):
 
         self.menujson = self.open_menu()
         if not self.menujson:
+            await self.log_channel.send("Discord button cog failed: Couldn't read menu.json")
             return
         # create text settings text messages.
         for menu in self.menujson:
@@ -265,17 +266,17 @@ class RoleBot(commands.Cog):
                             base_default_permission=False,
                             base_permissions=settings.DISCORD_COMMAND_PERMISSIONS,
                             options=[
-                                create_option(name="type", description="Select Cog", option_type=3, required=True,
+                                create_option(name="config_type", description="Type of config", option_type=3, required=False,
                                               choices=[
                                                   create_choice(name="running", value="running"),
                                                   create_choice(name="static", value="static"),
                                               ])
                             ])
-    async def rolebot_show(self, ctx: SlashContext, type):
+    async def rolebot_show(self, ctx: SlashContext, config_type: str = "static"):
         menu = None
-        if type == "running":
+        if config_type == "running":
             menu = self.menujson
-        if type == "static":
+        if config_type == "static":
             menu = self.open_menu()
 
         if menu:
