@@ -4,6 +4,8 @@ import os
 import discord
 from discord.ext import commands
 from discord_components import Button
+from discord_slash import cog_ext, SlashContext
+from discord_slash.utils.manage_commands import create_option, create_choice
 
 import settings
 
@@ -15,6 +17,7 @@ class RoleBot(commands.Cog):
     category_map = {}
     text_channel_map = {}
     log_channel = None
+    menujson = None
 
     def __init__(self, client):
         self.client = client
@@ -34,15 +37,13 @@ class RoleBot(commands.Cog):
         await self.init_text_channel_map(channel_cache)
         await self.init_role_map()
 
-        try:
-            f = open('menu.json', 'r')
-        except IOError:
+        self.menujson = self.open_menu()
+        if not self.menujson:
             return
-        else:
-            # create text settings text messages.
-            for menujson in json.load(f):
-                await self.create_rolebot_messages(menujson)
-            f.close()
+        # create text settings text messages.
+        for menu in self.menujson:
+            await self.create_rolebot_messages(menu)
+
         await self.log_channel.send("Discord button cog ready")
 
     @commands.Cog.listener()
@@ -56,6 +57,17 @@ class RoleBot(commands.Cog):
         else:
             await member.add_roles(role)
             await interaction.respond(content=f"{channel_name} is zichtbaar")
+
+    @staticmethod
+    def open_menu():
+        try:
+            f = open('menu.json', 'r')
+        except IOError:
+            return None
+        else:
+            menu = json.load(f)
+            f.close()
+            return menu
 
     async def init_category_map(self, channels):
         """
@@ -171,6 +183,106 @@ class RoleBot(commands.Cog):
                 return
 
         await channel.send(content=title, components=buttons)
+
+    '''
+    SECTION:
+    All rolebot related commands
+    '''
+
+    @staticmethod
+    def sync_menu(menu):
+        with open('menu.json', 'w', encoding='utf-8') as f:
+            json.dump(menu, f, ensure_ascii=True, indent=4)
+
+    @staticmethod
+    def get_or_create_category_menu(menu, category_name: str):
+        for category in menu:
+            if category["title"] == category_name:
+                return category
+
+        category = {"title": category_name, "channels": []}
+        menu.append(category)
+        return category
+
+    @staticmethod
+    def get_or_create_text_channel_menu(category, channel_name, role_name):
+        for channel in category["channels"]:
+            if channel["title"] == channel_name:
+                return False
+
+        category["channels"].append({"title": channel_name, "role": role_name})
+        return True
+
+    @cog_ext.cog_subcommand(base="rolebot", name="add",
+                            description="Add channel to role bot",
+                            guild_ids=settings.DISCORD_GUILD_IDS,
+                            base_default_permission=False,
+                            base_permissions=settings.DISCORD_COMMAND_PERMISSIONS,
+                            options=[
+                                create_option(name="category_name", description="#stuff", option_type=3, required=True),
+                                create_option(name="channel_name", description="#stuff", option_type=3, required=True),
+                                create_option(name="role_name", description="#stuff", option_type=3, required=False),
+                            ])
+    async def rolebot_add(self, ctx: SlashContext, category_name, channel_name, role_name=None):
+        if not role_name:
+            role_name = channel_name
+        menu = self.open_menu()
+        category = self.get_or_create_category_menu(menu, category_name)
+        modified = self.get_or_create_text_channel_menu(category, channel_name, role_name)
+        if modified:
+            self.sync_menu(menu)
+            await ctx.send(f"created \"{channel_name}\"", hidden=True)
+        else:
+            await ctx.send(f"\"{channel_name}\" already exists", hidden=True)
+
+    @cog_ext.cog_subcommand(base="rolebot", name="delete",
+                            description="delete channel from role bot",
+                            guild_ids=settings.DISCORD_GUILD_IDS,
+                            base_default_permission=False,
+                            base_permissions=settings.DISCORD_COMMAND_PERMISSIONS,
+                            options=[
+                                create_option(name="channel_name", description="#stuff", option_type=3, required=True)
+                            ])
+    async def rolebot_delete(self, ctx: SlashContext, channel_name):
+        modified = False
+        menu = self.open_menu()
+
+        for category in menu:
+            channels = list(filter(lambda channel: channel['title'] != channel_name, category["channels"]))
+            if len(channels) != len(category["channels"]):
+                modified = True
+                category["channels"] = channels
+
+        if modified:
+            self.sync_menu(menu)
+            await ctx.send(f"deleted \"{channel_name}\"", hidden=True)
+        else:
+            await ctx.send(f"Could not find \"{channel_name}\"", hidden=True)
+
+    @cog_ext.cog_subcommand(base="rolebot", name="show",
+                            description="show rolebot static/running config",
+                            guild_ids=settings.DISCORD_GUILD_IDS,
+                            base_default_permission=False,
+                            base_permissions=settings.DISCORD_COMMAND_PERMISSIONS,
+                            options=[
+                                create_option(name="type", description="Select Cog", option_type=3, required=True,
+                                              choices=[
+                                                  create_choice(name="running", value="running"),
+                                                  create_choice(name="static", value="static"),
+                                              ])
+                            ])
+    async def rolebot_show(self, ctx: SlashContext, type):
+        menu = None
+        if type == "running":
+            menu = self.menujson
+        if type == "static":
+            menu = self.open_menu()
+
+        if menu:
+            pretty_json = json.dumps(menu, indent=4)
+            await ctx.send(f"```{pretty_json}```", hidden=True)
+        else:
+            await ctx.send("Incorrect type", hidden=True)
 
 
 def setup(client):

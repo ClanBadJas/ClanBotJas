@@ -1,10 +1,8 @@
-import json
 from math import floor
 
 import discord
 from discord.ext import commands
 from discord_slash import SlashContext, cog_ext
-from discord_slash.utils.manage_commands import create_option
 
 import settings
 
@@ -61,95 +59,6 @@ class Commands(commands.Cog):
                        guild_ids=settings.DISCORD_GUILD_IDS)
     async def _getid(self, ctx: SlashContext):
         await ctx.send(content=f"Your id is: {ctx.author.id}", hidden=True)
-
-    @staticmethod
-    def open_menu():
-        try:
-            f = open('menu.json', 'r')
-        except IOError:
-            return
-        else:
-            menu = json.load(f)
-            f.close()
-            return menu
-
-    @staticmethod
-    def sync_menu(menu):
-        with open('menu.json', 'w', encoding='utf-8') as f:
-            json.dump(menu, f, ensure_ascii=True, indent=4)
-
-    @staticmethod
-    def get_or_create_category(menu, category_name: str):
-        for category in menu:
-            if category["title"] == category_name:
-                return category
-
-        category = {"title": category_name, "channels": []}
-        menu.append(category)
-        return category
-
-    @staticmethod
-    def get_or_create_text_channel(category, channel_name, role_name):
-        for channel in category["channels"]:
-            if channel["title"] == channel_name:
-                return False
-
-        category["channels"].append({"title": channel_name, "role": role_name})
-        return True
-
-    @cog_ext.cog_subcommand(base="rolebot", name="add",
-                            guild_ids=settings.DISCORD_GUILD_IDS,
-                            base_default_permission=False,
-                            base_permissions=settings.DISCORD_COMMAND_PERMISSIONS,
-                            options=[
-                                create_option(name="category_name", description="#stuff", option_type=3, required=True),
-                                create_option(name="channel_name", description="#stuff", option_type=3, required=True),
-                                create_option(name="role_name", description="#stuff", option_type=3, required=False),
-                            ])
-    async def add(self, ctx: SlashContext, category_name, channel_name, role_name=None):
-        if not role_name:
-            role_name = channel_name
-        menu = self.open_menu()
-        category = self.get_or_create_category(menu, category_name)
-        modified = self.get_or_create_text_channel(category, channel_name, role_name)
-        if modified:
-            self.sync_menu(menu)
-            await ctx.send(f"created \"{channel_name}\"", hidden=True)
-        else:
-            await ctx.send(f"\"{channel_name}\" already exists", hidden=True)
-
-
-
-    @cog_ext.cog_subcommand(base="rolebot", name="delete",
-                            guild_ids=settings.DISCORD_GUILD_IDS,
-                            base_default_permission=False,
-                            base_permissions=settings.DISCORD_COMMAND_PERMISSIONS,
-                            options=[
-                                create_option(name="channel_name", description="#stuff", option_type=3, required=True)
-                            ])
-    async def delete(self, ctx: SlashContext, channel_name):
-        modified = False
-        menu = self.open_menu()
-
-        for category in menu:
-            channels = list(filter(lambda channel: channel['title'] != channel_name, category["channels"]))
-            if len(channels) != len(category["channels"]):
-                modified = True
-                category["channels"] = channels
-
-        if modified:
-            self.sync_menu(menu)
-            await ctx.send(f"deleted \"{channel_name}\"", hidden=True)
-        else:
-            await ctx.send(f"Could not find \"{channel_name}\"", hidden=True)
-
-    @cog_ext.cog_subcommand(base="rolebot", name="show",
-                            guild_ids=settings.DISCORD_GUILD_IDS,
-                            base_default_permission=False,
-                            base_permissions=settings.DISCORD_COMMAND_PERMISSIONS, )
-    async def show(self, ctx: SlashContext):
-        pretty_json = json.dumps(self.open_menu(), indent=4)
-        await ctx.send(f"```{pretty_json}```", hidden=True)
 
 def setup(client):
     client.add_cog(Commands(client))
