@@ -7,6 +7,7 @@ from discord_slash import cog_ext, SlashContext
 from discord_slash.utils.manage_commands import create_option, create_choice
 
 import settings
+from cogs.commands import slashcommandlogger
 
 
 class RoleBot(commands.Cog):
@@ -223,6 +224,7 @@ class RoleBot(commands.Cog):
                                 create_option(name="channel_name", description="#stuff", option_type=3, required=True),
                                 create_option(name="role_name", description="#stuff", option_type=3, required=False),
                             ])
+    @slashcommandlogger
     async def rolebot_add(self, ctx: SlashContext, category_name, channel_name, role_name=None):
         if not role_name:
             role_name = channel_name
@@ -243,6 +245,7 @@ class RoleBot(commands.Cog):
                             options=[
                                 create_option(name="channel_name", description="#stuff", option_type=3, required=True)
                             ])
+    @slashcommandlogger
     async def rolebot_delete(self, ctx: SlashContext, channel_name):
         modified = False
         menu = self.open_menu()
@@ -272,6 +275,7 @@ class RoleBot(commands.Cog):
                                                   create_choice(name="static", value="static"),
                                               ])
                             ])
+    @slashcommandlogger
     async def rolebot_show(self, ctx: SlashContext, config_type: str = "static"):
         menu = None
         if config_type == "running":
@@ -280,7 +284,13 @@ class RoleBot(commands.Cog):
             menu = self.open_menu()
 
         if menu:
-            pretty_json = json.dumps(menu, indent=4)
+            string_builder = []
+            for category in menu:
+                string_builder.append(f"{category['title']}:")
+                for channel in category['channels']:
+                    string_builder.append(f"    name: {channel['title']}\n        role: {channel['role']}")
+
+            pretty_json = "\n".join(string_builder)
             await ctx.send(f"```{pretty_json}```", hidden=True)
         else:
             await ctx.send("Incorrect type", hidden=True)
