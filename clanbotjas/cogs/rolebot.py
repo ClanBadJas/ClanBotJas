@@ -288,7 +288,7 @@ class RoleBot(commands.Cog):
             for category in menu:
                 string_builder.append(f"{category['title']}:")
                 for channel in category['channels']:
-                    string_builder.append(f"    name: {channel['title']}\n        role: {channel['role']}")
+                    string_builder.append(f"\tname: {channel['title']}\n\t\trole: {channel['role']}")
 
             pretty_json = "\n".join(string_builder)
             await ctx.send(f"```{pretty_json}```", hidden=True)
