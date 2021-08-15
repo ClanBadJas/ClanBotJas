@@ -60,6 +60,7 @@ ClanBotJas can be run as standalone Python application, as a pre-built container
 * Please follow the guide by Discord to create your Discord Bot on the developer pages before following the steps below.
 * Make sure the bot has `Privileged Gateway Intents` enabled in the Discord developer environment.
 * Make sure the bot has the `Manage Channels` and `Manage Roles` permissions in the Discord server for the rolebot to function (don't forget the top level category permissions).
+
 This bot uses two different channels as handlers, one: create a dedicated TextChannel for the bot to deploy the Role buttons, two: create a dedicated TextChannel for the bot to send logs to. The logs TextChannel can be hidden to people on the server, just make sure the bot has access.
 
 ### Run as standalone Python application
