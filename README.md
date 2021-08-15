@@ -3,6 +3,7 @@
 
 ClanBotJas Discord Bot, based on discord.py version 1.7.3, is a simple, self-hosted, custom bot to implement automatic Voice Channel scaling, self-role TextChannel administration and some basic command functions. It has been written to combat Voice Channel management and the neverending battle of always having either too much or not enough Voice Channels available for your Discord members. It also changes the name of a Voice Channel to the activity of connected users, automatically showing the topic of the Voice Channel. The self-role funtionality allows users to add roles to themselves so they can (un)subscribe TextChannels to/from their client using a dedicated settings TextChannel.
 
+
 ## AutoScaler
 The AutoScaler functionality of this bot keeps an eye on a specific Voice Channel Category in the Discord server and makes sure there is always an empty Voice Channel available to use. When a user joins an empty Voice Channel, the bot creates a new Voice Channel if other users want a seperate conversation. When users leave a Voice Channel, the extra Voice Channel will be removed automatically to get back to a single empty Voice Channel.
 The AutoScaler functionality works on a clone Voice Channel basis, if the server is boosted and has access to higher quality bitrates make sure the first Voice Channel is configured to use the premium settings, all Voice Channels created by the AutoScaler will use these settings.
@@ -15,6 +16,7 @@ On top of the above AutoScaler functionality, the bot is also built to reflect t
 TBD (Not implemented yet): When all users disconnect, the Voice Channel name will automatically be reset to the default name specified in the `.env`.
 
 ![AutoRename](https://github.com/ClanBadJas/ClanBotJas/blob/master/docs/screenshots/AutoRename.png)
+
 
 ## TextChannel subscriptions (self-role)
 Our community has created a fairly extensive list of TextChannels with specific subjects. To avoid clutter and allow users to see only what they want to see, the TextChannel subscription service has been created. When requested with the slash command `/rolebot add`, ClanBotJas creates a new TextChannel with the desired name and a corresponding Discord Server Role that is linked to the new TextChannel with `View` permissions. Please note all changes are being written to `menu.json` first and will only be visible in the Discord server after sending the slash command `/reload rolebot`.
@@ -31,6 +33,7 @@ Slash commands to manage the rolebot:
 `/rolebot view` - View current `menu.json`, to make it active execute `/reload rolebot`. (NOTE: Will fail if list gets too long due to max characters)
 
 ![RoleBot](https://github.com/ClanBadJas/ClanBotJas/blob/master/docs/screenshots/RoleBot.png)
+
 
 ## Other Functions
 The bot has a few basic commands which can be useful (functions and permissions can be set in the corresponding `<command>.js` file inside the `commands` folder).
