@@ -5,6 +5,7 @@ import discord
 from discord.ext import commands
 from discord_slash import SlashContext, cog_ext
 
+import cogmanager
 import settings
 
 
@@ -14,17 +15,7 @@ def slashcommandlogger(func):
         # Some fancy foo stuff
         await func(self, ctx, *args, **kwargs)
         logChannel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
-
-        log_string = ":arrow_forward: Command:  "
-        log_string += ctx.channel.mention if isinstance(ctx.channel, discord.TextChannel) else "????"
-        log_string += f" | {ctx.author.mention}: /{ctx.command} "
-        if ctx.subcommand_name:
-            log_string += ctx.subcommand_name
-
-        for k, v in kwargs.items():
-            log_string += f" {k}: {v}"
-        await logChannel.send(log_string)
-
+        await cogmanager.logCommand(logChannel, ctx, **kwargs)
     return wrapped
 
 
@@ -35,13 +26,13 @@ class Commands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        await self.client.get_channel(settings.DISCORD_LOG_CHANNEL).send("Command cog ready")
+        await self.client.get_channel(settings.DISCORD_LOG_CHANNEL).send(":white_check_mark: Cog: \"commands\" ready.")
 
     @commands.command()
     async def say(self, ctx):
         logChannel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
         if not ctx.guild:
-            await ctx.send("Commando only works in a guild")
+            await ctx.send("Command only works in a guild.")
             return
         if ctx.guild.id != settings.DISCORD_GUILD_ID:
             return
@@ -51,9 +42,9 @@ class Commands(commands.Cog):
 
         if isinstance(ctx.channel, discord.TextChannel):
             await logChannel.send(
-                f":arrow_forward: Command:  {ctx.channel.mention} | {ctx.author.mention}: {ctx.message.content}", )
+                f":arrow_forward: Command:  {ctx.channel.mention} | {ctx.author.mention}: {ctx.message.content}.", )
         else:
-            await logChannel.send(f":arrow_forward: Command:  ???? | {ctx.author.mention}: {ctx.message.content}", )
+            await logChannel.send(f":arrow_forward: Command:  ???? | {ctx.author.mention}: {ctx.message.content}.", )
 
         arg = ctx.message.content[4:].strip() if len(ctx.message.content) > 4 else ''
         if len(arg) == 0:
