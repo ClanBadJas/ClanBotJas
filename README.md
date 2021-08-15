@@ -28,14 +28,14 @@ Slash commands to manage the rolebot:
 
 `/rolebot delete` - Remove a TextChannel and Role from the server.
 
-`/rolebot view` - View current `menu.json`, to make it active execute `/reload rolebot`.
+`/rolebot view` - View current `menu.json`, to make it active execute `/reload rolebot`. (NOTE: Will fail if list gets too long due to max characters)
 
 ![RoleBot](https://github.com/ClanBadJas/ClanBotJas/blob/master/docs/screenshots/RoleBot.png)
 
 ## Other Functions
 The bot has a few basic commands which can be useful (functions and permissions can be set in the corresponding `<command>.js` file inside the `commands` folder).
 
-`help` - Shows generic help or help for a specific command if specified as argument, can only be used with prefix in chat..
+`help` - Shows generic help or help for a specific command if specified as argument, can only be used with prefix in chat.
 
 `say` - Makes the bot say your message and deletes the message with your command, can only be used with prefix in chat.
 
@@ -54,30 +54,30 @@ TBD (Not implemented yet): `purge <1-99>` - purges X amount of messages from the
 
 ## Installation and configuration
 ClanBotJas can be run as standalone Python application, as a pre-built container or as a container built from source.
-Please follow the guide by Discord to create your Discord Bot on the developer pages before following the steps below.
-Make sure the bot has `Privileged Gateway Intents` enabled in the Discord developer environment.
-Make sure the bot has the `Manage Channels` and `Manage Roles` permissions in the Discord server for the rolebot to function (don't forget the top level category permissions).
+* Please follow the guide by Discord to create your Discord Bot on the developer pages before following the steps below.
+* Make sure the bot has `Privileged Gateway Intents` enabled in the Discord developer environment.
+* Make sure the bot has the `Manage Channels` and `Manage Roles` permissions in the Discord server for the rolebot to function (don't forget the top level category permissions).
 This bot uses two different channels as handlers, one: create a dedicated TextChannel for the bot to deploy the Role buttons, two: create a dedicated TextChannel for the bot to send logs to. The logs TextChannel can be hidden to people on the server, just make sure the bot has access.
 
 ### Run as standalone Python application
 Make sure you have Python 3.9 or later installed on your system.
-First `git clone` to the location you want to run the bot from.
-cd into the `clanbotjas` folder and `pip install -r requirements.txt` to install the dependencies.
-Configure the bot settings in `clanbotjas/settings/.env`, you can copy the `.env.example` to `.env` to make it easy, fill all the options with ID's from the Discord server.
-If you already know what TextChannels and Roles you like to have, do the same for `menu.json` as what was just done for `.env` and edit it to fit the Discord server.
-Now start the bot using `python cogmanager.py`
+* First `git clone` to the location you want to run the bot from.
+* cd into the `clanbotjas` folder and `pip install -r requirements.txt` to install the dependencies.
+* Configure the bot settings in `clanbotjas/settings/.env`, you can copy the `.env.example` to `.env` to make it easy, fill all the options with ID's from the Discord server.
+* If you already know what TextChannels and Roles you like to have, do the same for `menu.json` as what was just done for `.env` and edit it to fit the Discord server.
+* Now start the bot using `python cogmanager.py`
 
 ### Run as container
 Running a container is quite easy, all that's required is a capable Docker host (including docker-compose) and a few files.
-Get the `docker-compose.yml`, `.env.example` and the `menu.json.example` and save them somewhere.
-Rename the `menu.json.example` to `menu.json`, edit the values and save it somewhere accessible.
-Rename the `.env.example` to `.env` and edit the values to reflect the ID's of the Discord server.
-Edit the `docker-compose.yml` to mount the folder with the `menu.json` to `clanbotjas/settings` for persistent storage.
-Run `docker-compose up -d`
+* Get the `docker-compose.yml`, `.env.example` and the `menu.json.example` and save them somewhere.
+* Rename the `menu.json.example` to `menu.json`, edit the values and save it somewhere accessible.
+* Rename the `.env.example` to `.env` and edit the values to reflect the ID's of the Discord server.
+* Edit the `docker-compose.yml` to mount the folder with the `menu.json` to `clanbotjas/settings` for persistent storage.
+* Run `docker-compose up -d`
 
 ### Build the container from source
-First `git clone` to the location you want to run the bot from.
-Make sure to be in the root of the project.
-Run `docker build -t <username>/<repository>:[version]` to build the container.
-Now edit `docker-compose.yml` to reflect the built container image.
-Follow the steps described above (Run as container)
+* First `git clone` to the location you want to run the bot from.
+* Make sure to be in the root of the project.
+* Run `docker build -t <username>/<repository>:[version]` to build the container.
+* Now edit `docker-compose.yml` to reflect the built container image.
+* Follow the steps described above (Run as container)
