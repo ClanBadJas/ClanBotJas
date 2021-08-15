@@ -166,7 +166,7 @@ class RoleBot(commands.Cog):
         buttons = [[]]
 
         channel = self.client.get_channel(settings.DISCORD_ROLEBOT_SETTINGS_CHANNEL)
-        title = "> " + menujson["title"]
+        title = f"** {menujson['title']} **"
 
         async for role, channel_name in self.create_channels(menujson):
             if len(buttons[-1]) > 4:

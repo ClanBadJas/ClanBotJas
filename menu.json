@@ -1,6 +1,6 @@
 [
     {
-        "title": "games",
+        "title": "Games",
         "channels": [
             {
                 "title": "team-fortress-2",
@@ -25,7 +25,7 @@
         ]
     },
     {
-        "title": "chatrooms",
+        "title": "Chatrooms",
         "channels": [
             {
                 "title": "mededelingen",
