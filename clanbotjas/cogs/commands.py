@@ -1,3 +1,4 @@
+import functools
 from math import floor
 
 import discord
@@ -7,6 +8,24 @@ from discord_slash import SlashContext, cog_ext
 import settings
 
 
+def slashcommandlogger(func):
+    @functools.wraps(func)
+    async def wrapped(self, ctx, *args, **kwargs):
+        # Some fancy foo stuff
+        await func(self, ctx, *args, **kwargs)
+        logChannel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
+
+        log_string = ":arrow_forward: Command:  "
+        log_string += ctx.channel.mention if isinstance(ctx.channel, discord.TextChannel) else "????"
+        log_string += f" | {ctx.author.mention}: /{ctx.command} "
+        if ctx.subcommand_name:
+            log_string += ctx.subcommand_name
+
+        for k, v in kwargs.items():
+            log_string += f" {k}: {v}"
+        await logChannel.send(log_string)
+
+    return wrapped
 
 
 class Commands(commands.Cog):
@@ -49,6 +68,7 @@ class Commands(commands.Cog):
                        guild_ids=settings.DISCORD_GUILD_IDS,
                        permissions=settings.DISCORD_COMMAND_PERMISSIONS,
                        default_permission=False, )
+    @slashcommandlogger
     async def ping(self, ctx: SlashContext):
         msg = await ctx.send("Ping?")
 
@@ -59,6 +79,7 @@ class Commands(commands.Cog):
     @cog_ext.cog_slash(name="getid",
                        description="get your user ID",
                        guild_ids=settings.DISCORD_GUILD_IDS)
+    @slashcommandlogger
     async def _getid(self, ctx: SlashContext):
         await ctx.send(content=f"Your id is: {ctx.author.id}", hidden=True)
 
