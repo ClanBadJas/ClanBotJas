@@ -30,7 +30,7 @@ Slash commands to manage the rolebot:
 
 `/rolebot delete` - Remove a TextChannel and Role from the server.
 
-`/rolebot view` - View current `menu.json`, to make it active execute `/reload rolebot`. (NOTE: Will fail if list gets too long due to max characters)
+`/rolebot show` - View current `menu.json`, to make it active execute `/reload rolebot`. (NOTE: Will fail if list gets too long due to max characters)
 
 ![RoleBot](https://github.com/ClanBadJas/ClanBotJas/blob/master/docs/screenshots/RoleBot.png)
 
