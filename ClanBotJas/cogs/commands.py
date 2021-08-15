@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 from discord_slash import SlashContext, cog_ext
 
-import settings
+from ClanBotJas import settings
 
 
 class Commands(commands.Cog):

@@ -1,5 +1,4 @@
 import json
-import os
 
 import discord
 from discord.ext import commands
@@ -7,7 +6,7 @@ from discord_components import Button
 from discord_slash import cog_ext, SlashContext
 from discord_slash.utils.manage_commands import create_option, create_choice
 
-import settings
+from ClanBotJas import settings
 
 
 class RoleBot(commands.Cog):
@@ -62,7 +61,7 @@ class RoleBot(commands.Cog):
     @staticmethod
     def open_menu():
         try:
-            f = open('menu.json', 'r')
+            f = open('settings/menu.json', 'r')
         except IOError:
             return None
         else:
@@ -192,7 +191,7 @@ class RoleBot(commands.Cog):
 
     @staticmethod
     def sync_menu(menu):
-        with open('menu.json', 'w', encoding='utf-8') as f:
+        with open('settings/menu.json', 'w', encoding='utf-8') as f:
             json.dump(menu, f, ensure_ascii=True, indent=4)
 
     @staticmethod

@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-import settings
+from ClanBotJas import settings
 
 
 class VoiceChannelBot(commands.Cog):

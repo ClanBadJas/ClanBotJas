@@ -1,5 +1,5 @@
-.env
-menu.json
+ClanBotJas/settings/.env
+ClanBotJas/settings/menu.json
 /.idea/
 /clanbotjas/
 /venv/
