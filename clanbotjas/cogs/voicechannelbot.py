@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from clanbotjas import settings
+import settings
 
 
 class VoiceChannelBot(commands.Cog):

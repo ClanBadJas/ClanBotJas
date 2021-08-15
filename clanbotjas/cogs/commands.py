@@ -4,20 +4,9 @@ import discord
 from discord.ext import commands
 from discord_slash import SlashContext, cog_ext
 
-from clanbotjas import settings
+import settings
 
 
-# def wrap(f):
-#     def wrapped_f(self, ctx: SlashContext):
-#         logChannel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
-#         if isinstance(ctx.channel, discord.TextChannel):
-#             await logChannel.send(
-#                 f":arrow_forward: Command:  {ctx.channel.mention} | {ctx.author.mention}: {ctx.command}", )
-#         else:
-#             await logChannel.send(f":arrow_forward: Command:  ???? | {ctx.author.mention}: {ctx.command}", )
-#         f(self, ctx)
-#
-#     return wrapped_f
 
 
 class Commands(commands.Cog):
@@ -60,7 +49,6 @@ class Commands(commands.Cog):
                        guild_ids=settings.DISCORD_GUILD_IDS,
                        permissions=settings.DISCORD_COMMAND_PERMISSIONS,
                        default_permission=False, )
-    # @wrap
     async def ping(self, ctx: SlashContext):
         msg = await ctx.send("Ping?")
 

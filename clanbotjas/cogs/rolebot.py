@@ -6,7 +6,7 @@ from discord_components import Button
 from discord_slash import cog_ext, SlashContext
 from discord_slash.utils.manage_commands import create_option, create_choice
 
-from clanbotjas import settings
+import settings
 
 
 class RoleBot(commands.Cog):
@@ -265,7 +265,8 @@ class RoleBot(commands.Cog):
                             base_default_permission=False,
                             base_permissions=settings.DISCORD_COMMAND_PERMISSIONS,
                             options=[
-                                create_option(name="config_type", description="Type of config", option_type=3, required=False,
+                                create_option(name="config_type", description="Type of config", option_type=3,
+                                              required=False,
                                               choices=[
                                                   create_choice(name="running", value="running"),
                                                   create_choice(name="static", value="static"),
