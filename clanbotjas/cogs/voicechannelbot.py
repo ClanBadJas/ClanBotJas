@@ -21,7 +21,7 @@ class VoiceChannelBot(commands.Cog):
         self.logChannel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
         self.category = self.client.get_channel(settings.DISCORD_VOICE_CHANNEL_CATEGORY)
         await self.autoscale()
-        await self.logChannel.send("Voice channel cog ready")
+        await self.logChannel.send(":white_check_mark: Cog: \"voicechannelbot\" ready.")
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):

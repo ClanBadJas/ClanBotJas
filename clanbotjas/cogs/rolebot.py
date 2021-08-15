@@ -39,13 +39,13 @@ class RoleBot(commands.Cog):
 
         self.menujson = self.open_menu()
         if not self.menujson:
-            await self.log_channel.send("Discord button cog failed: Couldn't read menu.json")
+            await self.log_channel.send("Discord button cog failed: Couldn't read menu.json.")
             return
         # create text settings text messages.
         for menu in self.menujson:
             await self.create_rolebot_messages(menu)
 
-        await self.log_channel.send("Discord button cog ready")
+        await self.log_channel.send(":white_check_mark: Cog: \"rolebot\" ready.")
 
     @commands.Cog.listener()
     async def on_button_click(self, interaction):
@@ -233,9 +233,9 @@ class RoleBot(commands.Cog):
         modified = self.get_or_create_text_channel_menu(category, channel_name, role_name)
         if modified:
             self.sync_menu(menu)
-            await ctx.send(f"created \"{channel_name}\"", hidden=True)
+            await ctx.send(f"created \"{channel_name}\".", hidden=True)
         else:
-            await ctx.send(f"\"{channel_name}\" already exists", hidden=True)
+            await ctx.send(f"\"{channel_name}\" already exists.", hidden=True)
 
     @cog_ext.cog_subcommand(base="rolebot", name="delete",
                             description="delete channel from role bot",
@@ -258,9 +258,9 @@ class RoleBot(commands.Cog):
 
         if modified:
             self.sync_menu(menu)
-            await ctx.send(f"deleted \"{channel_name}\"", hidden=True)
+            await ctx.send(f"deleted \"{channel_name}\".", hidden=True)
         else:
-            await ctx.send(f"Could not find \"{channel_name}\"", hidden=True)
+            await ctx.send(f"Could not find \"{channel_name}\".", hidden=True)
 
     @cog_ext.cog_subcommand(base="rolebot", name="show",
                             description="show rolebot static/running config",
@@ -293,7 +293,7 @@ class RoleBot(commands.Cog):
             pretty_json = "\n".join(string_builder)
             await ctx.send(f"```{pretty_json}```", hidden=True)
         else:
-            await ctx.send("Incorrect type", hidden=True)
+            await ctx.send("Incorrect type.", hidden=True)
 
 
 def setup(client):
