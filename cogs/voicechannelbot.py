@@ -19,7 +19,7 @@ class VoiceChannelBot(commands.Cog):
         :return:
         """
         self.logChannel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
-        self.category = self.client.get_channel(settings.DISCORD_VOICE_CHANNEL_BOT_ID)
+        self.category = self.client.get_channel(settings.DISCORD_VOICE_CHANNEL_CATEGORY)
         await self.autoscale()
         await self.logChannel.send("Voice channel cog ready")
 
@@ -89,7 +89,7 @@ class VoiceChannelBot(commands.Cog):
 
         # If no empty channel exists, create a new one
         if empty_channel is None:
-            empty_channel = await template.clone(name="Voice Channel")
+            empty_channel = await template.clone(name=settings.DISCORD_VOICE_CHANNEL_DEFAULT_NAME)
             await self.logChannel.send(
                 f":arrows_clockwise: AutoScale:		New channel created. Now managing {before_channel_count + 1} channels.")
 
@@ -113,7 +113,7 @@ class VoiceChannelBot(commands.Cog):
                     else:
                         games[activity.name] += 1
         highest_hitcount = 0
-        highest_name = "Voice Channel"
+        highest_name = settings.DISCORD_VOICE_CHANNEL_DEFAULT_NAME
         for key, value in games.items():
             if value > highest_hitcount:
                 highest_hitcount = value
