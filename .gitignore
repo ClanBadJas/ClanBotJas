@@ -1,6 +1,4 @@
-ClanBotJas/settings/.env
-ClanBotJas/settings/menu.json
+clanbotjas/settings/.env
+clanbotjas/settings/menu.json
 /.idea/
-/clanbotjas/
 /venv/
-/rolebot/

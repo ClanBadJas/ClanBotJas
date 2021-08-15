@@ -6,7 +6,7 @@ from discord_components import Button
 from discord_slash import cog_ext, SlashContext
 from discord_slash.utils.manage_commands import create_option, create_choice
 
-from ClanBotJas import settings
+from clanbotjas import settings
 
 
 class RoleBot(commands.Cog):
