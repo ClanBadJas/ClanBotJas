@@ -57,8 +57,10 @@ class VoiceChannelBot(commands.Cog):
             channels.add(after.voice.channel)
         await self.sync_channel_names(channels)
 
-    async def sync_channel_names(self, *args):
+    async def sync_channel_names(self, args):
         for voice_channel in args:
+            if voice_channel.category != self.category:
+                continue
             name = self.get_most_played_game(voice_channel)
             if voice_channel.name != name:
                 await self.logChannel.send(
