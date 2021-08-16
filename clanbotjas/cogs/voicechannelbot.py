@@ -34,7 +34,13 @@ class VoiceChannelBot(commands.Cog):
         """
         if before.channel != after.channel:
             await self.autoscale()
-        await self.sync_channel_names({before.channel, after.channel})
+        channels = set()
+        if before and before.channel:
+            channels.add(before.channel)
+        if after and after.channel:
+            channels.add(after.channel)
+
+        await self.sync_channel_names(channels)
         # Make sure This is not an event within the same channel
 
     @commands.Cog.listener()
