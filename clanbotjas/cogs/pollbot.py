@@ -61,15 +61,25 @@ class PollEntry(object):
     def update_user(self, user, values):
         self.user_options[user.id] = values
 
-    def plot(self):
+    def names(self):
+        return "\n".join(self.bars)
+
+    def values(self):
         height = np.zeros(len(self.bars), dtype=int)
         for indices in self.user_options.values():
             height[indices] += 1
-        argsorted = np.argsort(height)[::-1]
-        string_builder = [f"{self.bars[i]}: {height[i]}" for i in argsorted]
-        body = '\n'.join(string_builder)
-        return f"> {self.description}\n{body}"
+        # argsorted = np.argsort(height)[::-1]
+        # string_builder = [f"{self.bars[i]}: {height[i]}" for i in argsorted]
+        # body = '\n'.join(string_builder)
+        # return f"> {self.description}\n{body}"
+        return"\n".join([str(i) for i in height])
 
+    def create_embed(self):
+        embed = discord.Embed(title=self.description)
+        embed.set_author(name=self.user.name, icon_url=self.user.avatar_url)
+        embed.add_field(name="Option", value=self.names(), inline=True)
+        embed.add_field(name="Votes", value=self.values(), inline=True)
+        return embed
 
     def results(self):
         height = np.zeros(len(self.bars), dtype=int)
@@ -108,28 +118,8 @@ class PollBot(commands.Cog):
                        guild_ids=settings.DISCORD_GUILD_IDS, options=options)
     async def _createpoll(self, ctx: SlashContext, description, max_values, **kwargs):
         entry = PollEntry(ctx.author, description, kwargs)
-        embed = discord.Embed(title="Sample Embed", url="https://realdrewdata.medium.com/",
-                              description="This is an embed that will show how to build an embed and the different components",
-                              color=0x109319)
-
-        # Add author, thumbnail, fields, and footer to the embed
-        embed.set_author(name="RealDrewData", url="https://twitter.com/RealDrewData",
-                         icon_url="https://pbs.twimg.com/profile_images/1327036716226646017/ZuaMDdtm_400x400.jpg")
-
-        embed.set_thumbnail(url="https://i.imgur.com/axLm3p6.jpeg")
-
-        embed.add_field(name="Field 1 Title", value="This is the value for field 1. This is NOT an inline field.",
-                        inline=False)
-        embed.add_field(name="Field 2 Title", value="It is inline with Field 3", inline=True)
-        embed.add_field(name="Field 3 Title", value="It is inline with Field 2", inline=True)
-
-        embed.set_footer(text="This is the footer. It contains text at the bottom of the embed")
-
-        message = await ctx.send(content=entry.plot(), components=[entry.get_components(max_values),
-                                                                   create_actionrow(
-                                                                       create_button(style=ButtonStyle.grey,
-                                                                                     label="plot results"))],
-                                 hidden=False)
+        message = await ctx.send(embed=entry.create_embed(), components=[entry.get_components(max_values), create_actionrow(create_button(style=ButtonStyle.grey, label="plot results"))],hidden=False)
+        # message = await ctx.send(content=entry.plot(),
         self.poll_map[message.id] = entry
 
     @commands.Cog.listener()
@@ -137,12 +127,14 @@ class PollBot(commands.Cog):
         indices = np.array([int(component.value) for component in interaction.component])
         entry = self.poll_map[interaction.message.id]
         entry.update_user(interaction.author, indices)
-        plot = entry.plot()
-        await interaction.respond(type=InteractionType.UpdateMessage, content=plot)
+
+        await interaction.respond(type=InteractionType.UpdateMessage, embed=entry.create_embed())
         # await interaction.message.edit(file=entry.plot())
 
     @commands.Cog.listener()
     async def on_button_click(self, interaction):
+        if interaction.message.id not in self.poll_map:
+            return
 
         entry = self.poll_map[interaction.message.id]
         if entry.user != interaction.author:

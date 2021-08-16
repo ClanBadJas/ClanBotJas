@@ -49,7 +49,13 @@ class RoleBot(commands.Cog):
 
     @commands.Cog.listener()
     async def on_button_click(self, interaction):
-        role_id = int(interaction.component.custom_id)
+        try:
+            role_id = int(interaction.component.custom_id)
+        except ValueError:
+            return
+        if role_id not in self.menu:
+            return
+
         member = await self.guild.fetch_member(interaction.user.id)
         role, channel_name = self.menu[role_id]
         if role in member.roles:
