@@ -34,24 +34,25 @@ class VoiceChannelBot(commands.Cog):
         """
         if before.channel != after.channel:
             await self.autoscale()
-        await self.on_member_update()
+        await self.sync_channel_names({before.channel, after.channel})
         # Make sure This is not an event within the same channel
 
     @commands.Cog.listener()
-    async def on_member_update(self, before=None, after=None):
+    async def on_member_update(self, before, after):
         """
         check if the user is playing a different game.
         :param args:
         :return:
         """
-        if not before or not before.voice or not before.voice.channel:
-            return
-        if not after or not after.voice or not after.voice.channel:
-            return
-        if before.activities == after.activities:
-            return
+        channels = set()
+        if before and before.voice and before.voice.channel:
+            channels.add(before.voice.channel)
+        if after and after.voice and after.voice.channel:
+            channels.add(after.voice.channel)
+        await self.sync_channel_names(channels)
 
-        for voice_channel in {before.voice.channel, after.voice.channel}:
+    async def sync_channel_names(self, *args):
+        for voice_channel in args:
             name = self.get_most_played_game(voice_channel)
             if voice_channel.name != name:
                 await self.logChannel.send(
