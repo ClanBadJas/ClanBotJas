@@ -21,6 +21,7 @@ class VoiceChannelBot(commands.Cog):
         self.logChannel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
         self.category = self.client.get_channel(settings.DISCORD_VOICE_CHANNEL_CATEGORY)
         await self.autoscale()
+        await self.sync_channel_names(self.category.voice_channels)
         await self.logChannel.send(":white_check_mark: Cog: \"voicechannelbot\" ready.")
 
     @commands.Cog.listener()
