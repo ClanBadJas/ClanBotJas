@@ -30,6 +30,7 @@ DISCORD_COGS = [
     create_choice(name="rolebot", value="RoleBot"),
     create_choice(name="commands", value="Commands"),
     create_choice(name="voicechannelbot", value="VoiceChannelBot"),
+    create_choice(name="pollbot", value="PollBot"),
 ]
 
 DISCORD_COMMAND_PERMISSIONS = {

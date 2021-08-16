@@ -32,23 +32,21 @@ class VoiceChannelBot(commands.Cog):
         :param after: after channel state
         :return:
         """
-        if before.channel != after.channel:
-            await self.autoscale()
-        await self.on_member_update()
+
+        # await self.autoscale()
+        await self.on_member_update(None, None)
         # Make sure This is not an event within the same channel
 
     @commands.Cog.listener()
-    async def on_member_update(self, before=None, after=None):
+    async def on_member_update(self, before, after):
         """
         check if the user is playing a different game.
-        :param args:
+        :param after:
+        :param before:
         :return:
         """
-        if not before or not before.voice or not before.voice.channel:
-            return
-        if not after or not after.voice or not after.voice.channel:
-            return
-        if before.activities == after.activities:
+
+        if before and after and before.activities == after.activities:
             return
 
         for voice_channel in {before.voice.channel, after.voice.channel}:
