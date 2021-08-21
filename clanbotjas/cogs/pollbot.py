@@ -1,21 +1,20 @@
 import functools
-from math import floor
 import io
 
+from PIL import Image, ImageDraw
 from discord_slash.utils.manage_components import create_select, create_select_option, create_actionrow, create_button
 
 import discord
 import numpy as np
 from discord.ext import commands
-from discord_components import Select, SelectOption, InteractionType
+from discord_components import InteractionType
 from discord_slash import SlashContext, cog_ext
 from discord_slash.model import ButtonStyle
-from matplotlib import pyplot as plt
 
 import cogmanager
 import settings
 
-from discord_slash.utils.manage_commands import create_option, create_choice
+from discord_slash.utils.manage_commands import create_option
 
 options = [create_option(name="description", description="Poll description", option_type=3, required=True),
            create_option(name="max_values", description="Maximum amount of selected components", option_type=4,
@@ -28,27 +27,27 @@ import threading
 plotlock = threading.Lock()
 
 
+def create_poll_image(heights, bars):
+    bitmap = np.tile(settings.DISCORD_POLL_EMPTY, (heights.size, 1, 1))
+    bar_height, bar_width, _ = settings.DISCORD_POLL_EMPTY.shape
+    max = np.max(heights)
 
+    for i, height in enumerate(heights):
+        width = height * bar_width // 100
+        bar = settings.DISCORD_POLL_WIN if height == max else settings.DISCORD_POLL_FULL
+        bitmap[i * bar_height:(i + 1) * bar_height, :width] = bar[:, :width]
 
-def generate_image(height, bars):
-    buf = io.BytesIO()
-    y_pos = np.arange(len(bars))
-
-    plotlock.acquire()
-    fig, ax = plt.subplots()
-    ax.barh(y_pos, height, align='center')
-    ax.set_yticks(y_pos)
-    ax.set_yticklabels(bars)
-    ax.invert_yaxis()  # labels read top-to-bottom
-    ax.set_xlabel('Performance')
-    ax.set_title('How fast do you want to go today?')
-    plt.savefig(buf)
-    plt.rcdefaults()
-
-    plotlock.release()
-
-    buf.seek(0)
-    return buf
+    image = Image.fromarray(bitmap)
+    draw = ImageDraw.Draw(image)
+    for i, height in enumerate(heights):
+        if height == max:
+            font, bar_y = settings.DISCORD_TTF_POLL_BOLD, bar_height // 2 + i * bar_height + 13
+        else:
+            font, bar_y = settings.DISCORD_TTF_POLL_NORMAL, bar_height // 2 + i * bar_height
+        lbound, rbound = 25 * settings.DISCORD_TTF_SCALE_FACTOR, bar_width - 25 * settings.DISCORD_TTF_SCALE_FACTOR
+        draw.text((lbound, bar_y), f"{bars[i]}", fill="white", anchor="lm", font=font)
+        draw.text((rbound, bar_y), f"{height}%", fill="white", anchor="rm", font=font)
+    return image
 
 
 class PollEntry(object):
@@ -68,10 +67,6 @@ class PollEntry(object):
         height = np.zeros(len(self.bars), dtype=int)
         for indices in self.user_options.values():
             height[indices] += 1
-        # argsorted = np.argsort(height)[::-1]
-        # string_builder = [f"{self.bars[i]}: {height[i]}" for i in argsorted]
-        # body = '\n'.join(string_builder)
-        # return f"> {self.description}\n{body}"
         return"\n".join([str(i) for i in height])
 
     def create_embed(self):
@@ -85,8 +80,15 @@ class PollEntry(object):
         height = np.zeros(len(self.bars), dtype=int)
         for indices in self.user_options.values():
             height[indices] += 1
-        argsorted = np.argsort(height)[::-1]
-        return discord.File(generate_image(height[argsorted], self.bars[argsorted]), filename="ctx.png")
+        # height = height * 100 // len(self.user_options)
+        height = height * 100 // np.sum(height)
+
+        buf = io.BytesIO()
+        image = create_poll_image(height, self.bars)
+        image.save(buf, format='PNG')
+        buf.seek(0)
+
+        return discord.File(buf, filename="pollresult.png")
 
     def get_components(self, max_values):
         options = [create_select_option(label=name, value=str(i)) for i, name in enumerate(self.bars)]
@@ -145,8 +147,8 @@ class PollBot(commands.Cog):
         for interaction_row in components:
             for component in interaction_row:
                 component.disabled = True
-
-        await interaction.message.reply(content="resulting poll", file=entry.results())
+        file = entry.results()
+        await interaction.message.reply(content="resulting poll", file=file)
         await interaction.respond(type=7, components=components)
 
 
