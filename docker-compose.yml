@@ -2,7 +2,7 @@ version: "3.9"
 services:
   clanbotjas:
     container_name: clanbotjas
-    image: clanbadjas/clanbotjas:latest
+    image: clanbadjas/clanbotjas:v1.2.2
     env_file: .env
     volumes:
-      - /opt/discord/ClanBotJas/clanbotjas/settings:/settings
+      - /opt/discord/ClanBotJas/clanbotjas/settings:/clanbotjas/settings

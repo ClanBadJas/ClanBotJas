@@ -2,4 +2,5 @@ clanbotjas/settings/.env
 clanbotjas/settings/menu.json
 /.idea/
 /venv/
+.env
 /clanbotjas/settings/*.ttf
