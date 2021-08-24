@@ -59,6 +59,11 @@ class VoiceChannelBot(commands.Cog):
         await self.sync_channel_names(channels)
 
     async def sync_channel_names(self, args):
+        """
+        Make sure all voice channels in the args have the right voice channel names
+        :param args:
+        :return:
+        """
         for voice_channel in args:
             if voice_channel.category != self.category:
                 continue
