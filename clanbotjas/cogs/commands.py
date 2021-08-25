@@ -3,7 +3,8 @@ from math import floor
 
 import discord
 from discord.ext import commands
-from discord_slash import SlashContext, cog_ext
+from discord_slash import SlashContext, cog_ext, ContextMenuType, MenuContext
+from discord_slash.utils.manage_commands import create_option
 
 import cogmanager
 import settings
@@ -15,12 +16,14 @@ def slashcommandlogger(func):
     :param func: original function
     :return: wrapped function
     """
+
     @functools.wraps(func)
     async def wrapped(self, ctx, *args, **kwargs):
         # Some fancy foo stuff
         await func(self, ctx, *args, **kwargs)
         logChannel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
         await cogmanager.logCommand(logChannel, ctx, **kwargs)
+
     return wrapped
 
 
@@ -86,6 +89,14 @@ class Commands(commands.Cog):
         :return:
         """
         await ctx.send(content=f"Your id is: {ctx.author.id}", hidden=True)
+
+    @cog_ext.cog_slash(name="purge", description="purge messages", guild_ids=settings.DISCORD_GUILD_IDS,
+                       permissions=settings.DISCORD_COMMAND_PERMISSIONS, default_permission=False,
+                       options=[create_option(name="amount", description="Amount of messages to purge", option_type=4, required=True)])
+    @slashcommandlogger
+    async def purge(self, ctx: SlashContext, amount: int):
+        await ctx.channel.purge(limit=amount)
+        await ctx.send(content=f"Purged {amount} message(s).", hidden=True)
 
 
 def setup(client):
