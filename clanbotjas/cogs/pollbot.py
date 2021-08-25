@@ -49,9 +49,10 @@ class Poll(object):
         self.description = description
         self.user = user
         self.user_options = {}
-        self.max_values = max_values
         self.percentage_mode = percentage_mode
         self.options = np.array(list(opts.values()))
+        self.max_values = min(self.options.size, max_values)
+        pass
 
     def update_user(self, user, values):
         """
@@ -90,7 +91,9 @@ class Poll(object):
             heights[indices] += 1
 
         # Calculate the percentage
-        if self.percentage_mode == PercentageMode.CUMULATIVE:
+        if len(self.user_options) == 0:
+            pass
+        elif self.percentage_mode == PercentageMode.CUMULATIVE:
             heights = heights * 100 // np.sum(heights)
         else:
             heights = heights * 100 // len(self.user_options)
@@ -156,7 +159,7 @@ class Poll(object):
         """
         options = [create_select_option(label=name, value=str(i)) for i, name in enumerate(self.options)]
         return create_actionrow(
-            create_select(options, placeholder=f"select up to {self.max_values} option(s)", min_values=0, max_values=self.max_values))
+            create_select(options, placeholder=f"select up to {self.max_values} option(s)", max_values=self.max_values))
 
 
 def slashcommandlogger(func):
@@ -194,6 +197,8 @@ class PollBot(commands.Cog):
         :param opts: all of the poll options
         :return:
         """
+        if len(opts) == 0:
+            return await ctx.send(content="Please provide arguments", hidden=True)
         poll = Poll(ctx.author, description, percentage_mode, max_values, opts)
         components = [poll.get_components(), create_actionrow(create_button(ButtonStyle.grey, "Finish poll", custom_id="poll"))]
         message = await ctx.send(embed=poll.create_embed(), components=components, hidden=False)
