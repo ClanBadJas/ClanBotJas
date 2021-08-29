@@ -11,6 +11,7 @@ from discord_slash import SlashContext, cog_ext
 from discord_slash.model import ButtonStyle
 from discord.ext import commands
 from discord_components import InteractionType
+import discord_components
 
 import cogmanager
 import settings
@@ -204,6 +205,15 @@ class PollBot(commands.Cog):
         message = await ctx.send(embed=poll.create_embed(), components=components, hidden=False)
         self.poll_map[message.id] = poll
 
+    @staticmethod
+    def disable_components(components):
+        for interaction_row in components:
+            for component in interaction_row:
+                component.disabled = True
+                if isinstance(component, discord_components.Button):
+                    component.label = "Poll closed"
+
+
     @commands.Cog.listener()
     async def on_select_option(self, interaction):
         """
@@ -212,9 +222,7 @@ class PollBot(commands.Cog):
         # Make sure the poll is current
         if interaction.message.id not in self.poll_map:
             components = interaction.message.components
-            for interaction_row in components:
-                for component in interaction_row:
-                    component.disabled = True
+            self.disable_components(components)
 
             # Deactivate the poll and give feedback to voter
             await interaction.message.edit(components=components)
@@ -240,9 +248,8 @@ class PollBot(commands.Cog):
             return
         # Button needs to be deactivated
         components = interaction.message.components
-        for interaction_row in components:
-            for component in interaction_row:
-                component.disabled = True
+        self.disable_components(components)
+
 
         # If the poll is old deactivate it without further action
         if interaction.message.id not in self.poll_map:
