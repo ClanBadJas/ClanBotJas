@@ -1,6 +1,6 @@
-clanbotjas/settings/.env
-clanbotjas/settings/menu.json
+clanbotjas/data/.env
+clanbotjas/data/menu.json
 /.idea/
 /venv/
 .env
-/clanbotjas/settings/*.ttf
+/clanbotjas/data/*.ttf

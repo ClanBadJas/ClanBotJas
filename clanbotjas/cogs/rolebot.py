@@ -80,7 +80,7 @@ class RoleBot(commands.Cog):
         :return:
         """
         try:
-            f = open('settings/menu.json', 'r')
+            f = open('data/menu.json', 'r')
         except IOError:
             return None
         else:
@@ -218,7 +218,7 @@ class RoleBot(commands.Cog):
         :param menu:
         :return:
         """
-        with open('settings/menu.json', 'w', encoding='utf-8') as f:
+        with open('data/menu.json', 'w', encoding='utf-8') as f:
             json.dump(menu, f, ensure_ascii=True, indent=4)
 
     @staticmethod
