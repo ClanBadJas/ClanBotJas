@@ -18,15 +18,33 @@ async def logCommand(channel, ctx, *args, **kwargs):
 
     for k, v in kwargs.items():
         log_string += f" {k}: {v}"
-    log_string += "."
     await channel.send(log_string)
 
 
 client = commands.Bot(command_prefix="!", intents=settings.INTENTS)
 slash = SlashCommand(client, sync_commands=True, sync_on_cog_reload=True, override_type=True)
 
+@client.event
+async def on_command_error(ctx, error):
+    """
+    Give feedback to the user when he has no rights to use the command
+    :param ctx: original command context
+    :param error: Eroor
+    :return:
+    """
+    if isinstance(error, commands.MissingRole):
+        await ctx.send(f"{ctx.author.mention}, You do not have permissions to use that command.", hidden=True)
+    else:
+        raise error
+
+
 
 def slashcommandlogger(func):
+    """
+    Decorator to log slash commands
+    :param func: wrapped function
+    :return:
+    """
     @functools.wraps(func)
     async def wrapped(ctx, cog: str):
         # Some fancy foo stuff
@@ -47,6 +65,12 @@ def slashcommandlogger(func):
              ])
 @slashcommandlogger
 async def _load(ctx, cog: str):
+    """
+    Load a cog
+    :param ctx:  slash command context
+    :param cog: name of the cog
+    :return:
+    """
     cog, className = cog.lower(), cog
     try:
         client.load_extension(f"cogs.{cog}")
@@ -68,6 +92,12 @@ async def _load(ctx, cog: str):
              ])
 @slashcommandlogger
 async def _unload(ctx, cog: str):
+    """
+    Unload a cog
+    :param ctx: Original slash command context
+    :param cog: Name of the cog to unload
+    :return:
+    """
     cog, className = cog.lower(), cog
     try:
         client.unload_extension(f"cogs.{cog}")
@@ -88,6 +118,13 @@ async def _unload(ctx, cog: str):
              ])
 @slashcommandlogger
 async def _reload(ctx, cog: str):
+    """
+    Reload a cog
+    :param ctx:  original slash command context
+    :param cog: Name of the cog to reload
+    :return:
+    """
+    # Attempt to unload
     cog, className = cog.lower(), cog
     try:
         client.unload_extension(f"cogs.{cog}")
@@ -95,6 +132,7 @@ async def _reload(ctx, cog: str):
     except commands.errors.ExtensionNotLoaded:
         pass
 
+    # Load the cog
     client.load_extension(f"cogs.{cog}")
     bot = client.get_cog(className)
     await bot.on_ready()
@@ -102,6 +140,7 @@ async def _reload(ctx, cog: str):
 
 
 if __name__ == "__main__":
+    # Load all cogs
     for cog in settings.DISCORD_COGS:
         client.load_extension(f'cogs.{cog["name"]}')
 
