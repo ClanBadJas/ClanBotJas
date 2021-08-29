@@ -252,8 +252,8 @@ class PollBot(commands.Cog):
 
         # Check if the person who clicked the button is the original author
         poll = self.poll_map[interaction.message.id]
-        if poll.user != interaction.author:
-            await interaction.respond("You did not create the poll")
+        if poll.user.id != interaction.author.id:
+            await interaction.respond(content="You did not create the poll.")
             return
 
         # Original polls
