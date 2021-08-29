@@ -40,6 +40,6 @@ DISCORD_COMMAND_PERMISSIONS = {
 }
 
 DISCORD_TTF_SCALE_FACTOR = 10
-DISCORD_TTF_POLL_NORMAL = ImageFont.truetype("settings/Helvetica.ttf", 15 * DISCORD_TTF_SCALE_FACTOR)
-DISCORD_TTF_POLL_BOLD = ImageFont.truetype("settings/Helvetica-Bold-Font.ttf", 15 * DISCORD_TTF_SCALE_FACTOR)
-DISCORD_POLL_EMPTY, DISCORD_POLL_FULL, DISCORD_POLL_WIN = np.split(np.array(Image.open('settings/basepollimages.png')), 3)
+DISCORD_TTF_POLL_NORMAL = ImageFont.truetype("data/Helvetica.ttf", 15 * DISCORD_TTF_SCALE_FACTOR)
+DISCORD_TTF_POLL_BOLD = ImageFont.truetype("data/Helvetica-Bold-Font.ttf", 15 * DISCORD_TTF_SCALE_FACTOR)
+DISCORD_POLL_EMPTY, DISCORD_POLL_FULL, DISCORD_POLL_WIN = np.split(np.array(Image.open('data/basepollimages.png')), 3)
