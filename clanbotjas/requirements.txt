@@ -1,5 +1,6 @@
 discord-components==1.1.4
 discord-py-slash-command
+discord-together
 discord.py
 python-dotenv
 PyYAML

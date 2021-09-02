@@ -12,7 +12,7 @@ import settings
 async def logCommand(channel, ctx, *args, **kwargs):
     log_string = ":arrow_forward: Command:  "
     log_string += ctx.channel.mention if isinstance(ctx.channel, discord.TextChannel) else "????"
-    log_string += f" | {ctx.author.mention}: /{ctx.command} "
+    log_string += f" | {ctx.author}: /{ctx.command} "
     if ctx.subcommand_name:
         log_string += ctx.subcommand_name
 
