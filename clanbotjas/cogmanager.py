@@ -25,6 +25,18 @@ client = commands.Bot(command_prefix="!", intents=settings.INTENTS)
 slash = SlashCommand(client, sync_commands=True, sync_on_cog_reload=True, override_type=True)
 
 @client.event
+async def on_button_click(ctx):
+    logChannel = client.get_channel(settings.DISCORD_LOG_CHANNEL)
+    await logChannel.send(f":radio_button: Button clicked | {ctx.channel.mention} | {ctx.author} clicked ({ctx.component.label}).")
+@client.event
+async def on_select_option(ctx):
+    logChannel = client.get_channel(settings.DISCORD_LOG_CHANNEL)
+    opts = ", ".join([component.label for component in ctx.component])
+
+    await logChannel.send(f":ballot_box_with_check: Options selected | {ctx.channel.mention} | {ctx.author} selected: ({opts}).")
+
+
+@client.event
 async def on_command_error(ctx, error):
     """
     Give feedback to the user when he has no rights to use the command
