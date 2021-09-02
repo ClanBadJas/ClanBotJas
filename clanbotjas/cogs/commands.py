@@ -104,19 +104,15 @@ class Commands(commands.Cog):
                        options=[create_option(name="activity", description="Activity name", option_type=3, required=True, choices=[create_choice(i,i) for i in defaultApplications])])
     @slashcommandlogger
     async def activity(self, ctx: SlashContext, activity: str):
-
         if not ctx.author.voice or not ctx.author.voice.channel:
             return await ctx.send("You're not in a voice channel", hidden=True)
         channel = ctx.author.voice.channel
         # Prevent wierd bugs from voicechannelbot interactions, delete if you want to risc it
         if channel.category.id == settings.DISCORD_VOICE_CHANNEL_CATEGORY:
             return await ctx.send("Activities not allowed in dynamic channels", hidden=True)
-        link = await self.discordControl.create_link(ctx.author.voice.channel.id, activity)
+        link = await self.discordControl.create_link(channel.id, activity)
 
         await ctx.send(f"Created \"{activity}\" activity in {channel.mention}. Click the link below to activate it.\n{link}")
-
-
-
 
 def setup(client):
     client.add_cog(Commands(client))
