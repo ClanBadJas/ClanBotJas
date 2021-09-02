@@ -4,8 +4,9 @@ from math import floor
 import discord
 from discord.ext import commands
 from discord_slash import SlashContext, cog_ext, ContextMenuType, MenuContext
-from discord_slash.utils.manage_commands import create_option
-
+from discord_slash.utils.manage_commands import create_option, create_choice
+from discordTogether import DiscordTogether
+from discordTogether.discordTogetherMain import defaultApplications
 import cogmanager
 import settings
 
@@ -31,6 +32,7 @@ class Commands(commands.Cog):
 
     def __init__(self, client):
         self.client = client
+        self.discordControl = DiscordTogether(client)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -97,6 +99,17 @@ class Commands(commands.Cog):
     async def purge(self, ctx: SlashContext, amount: int):
         await ctx.channel.purge(limit=amount)
         await ctx.send(content=f"Purged {amount} message(s).", hidden=True)
+
+    @cog_ext.cog_slash(name="activity", description="play activity", guild_ids=settings.DISCORD_GUILD_IDS,
+                       options=[create_option(name="activity", description="Activity name", option_type=3, required=True, choices=[create_choice(i,i) for i in defaultApplications])])
+    @slashcommandlogger
+    async def activity(self, ctx: SlashContext, activity: str):
+        if not ctx.author.voice or not ctx.author.voice.channel:
+            return await ctx.send("You're not in a voice channel", hidden=True)
+        link = await self.discordControl.create_link(ctx.author.voice.channel.id, activity)
+        await ctx.send(f"{link}")
+
+
 
 
 def setup(client):
