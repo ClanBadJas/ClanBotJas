@@ -22,10 +22,10 @@ jobs:
         docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
     
     - name: Docker Build
-      run: docker build . --file Dockerfile --tag clanbadjas/clanbotjas-dev:$(date +%s) --tag clanbadjas/clanbotjas-dev:latest
+      run: docker build . --file Dockerfile --tag clanbadjas/clanbotjas-dev:$(date) --tag clanbadjas/clanbotjas-dev:latest
     
     - name: Docker Push latest tag
       run: docker push clanbadjas/clanbotjas-dev:latest
       
     - name: Docker Push timestamp tag
-      run: docker push clanbadjas/clanbotjas-dev:$(date +%s)
+      run: docker push clanbadjas/clanbotjas-dev:$(date)
