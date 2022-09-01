@@ -1,4 +1,5 @@
 import functools
+from tkinter import W
 from dotenv import load_dotenv
 
 import discord
@@ -19,20 +20,29 @@ async def logCommand(channel, ctx, *args, **kwargs):
 
 
 client = commands.Bot(command_prefix=commands.when_mentioned_or("!"), intents=settings.INTENTS)
-
-
 @client.event
-async def on_command_error(ctx, error):
+async def on_command_error(ctx: commands.Context, error: commands.CommandError):
     """
     Give feedback to the user when he has no rights to use the command
     :param ctx: original command context
     :param error: Eroor
     :return:
     """
-    if isinstance(error, commands.MissingRole):
-        await ctx.repond(f"{ctx.author.mention}, You do not have permissions to use that command.", ephemeral=True)
+
+    if isinstance(error, commands.errors.MissingRole):
+        await ctx.response.send_message(f"{ctx.author.mention}, You do not have permissions to use that command.", ephemeral=True)
     else:
         raise error
+
+@client.event
+async def on_application_command_error(ctx: commands.Context, error: commands.CommandError):
+    """
+    Give feedback to the user when he has no rights to use the command
+    :param ctx: original command context
+    :param error: Eroor
+    :return:
+    """
+    await on_command_error(ctx, error)
 
 def slashcommandlogger(func):
     """
@@ -48,11 +58,10 @@ def slashcommandlogger(func):
 
     return wrapped
 
-
 @client.slash_command(description="load a cog",
                       guild_ids=settings.DISCORD_GUILD_IDS,
-                      permissions=Permissions.administrator,
                       default_permission=False)
+@commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
 @option(name="cog", 
         description="Select Cog", 
         required=True,
@@ -75,12 +84,10 @@ async def load(ctx: discord.ApplicationContext, cog: str):
     except discord.errors.ExtensionAlreadyLoaded:
         await ctx.respond(f"Cog: \"{cog}\" already loaded.")
 
-
-
 @client.slash_command(description="unload a cog",
                       guild_ids=settings.DISCORD_GUILD_IDS,
-                      permissions=Permissions.administrator,
                       default_permission=False)
+@commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
 @option(name="cog", 
         description="Select Cog", 
         required=True,
@@ -104,8 +111,8 @@ async def unload(ctx, cog: str):
 
 @client.slash_command(description="reload a cog",
                       guild_ids=settings.DISCORD_GUILD_IDS,
-                      permissions=Permissions.administrator,
                       default_permission=False)
+@commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
 @option(name="cog", 
         description="Select Cog", 
         required=True,
@@ -131,7 +138,7 @@ async def reload(ctx, cog: str):
     client.load_extension(f"cogs.{cog}")
     bot = client.get_cog(className)
     await bot.on_ready()
-    await ctx.send(f"Cog: \"{cog}\" reloaded.", hidden=True)
+    await ctx.send(f"Cog: \"{cog}\" reloaded.")
 
 
 if __name__ == "__main__":

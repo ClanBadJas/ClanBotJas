@@ -1,4 +1,5 @@
 import json
+from tkinter import W
 import yaml
 
 import discord
@@ -248,8 +249,8 @@ class RoleBot(commands.Cog):
     @rolebot.command( name="add",
                       description="Add channel to role bot",
                       guild_ids=settings.DISCORD_GUILD_IDS,
-                      permissions=Permissions.administrator,
                       default_permission=False)
+    @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
     @option("category_name", description="#stuff", required=True)
     @option("channel_name", description="#stuff", required=True)
     @option("role_name", description="#stuff", required=False)
@@ -269,15 +270,15 @@ class RoleBot(commands.Cog):
         modified = self.get_or_create_text_channel_menu(category, channel_name, role_name)
         if modified:
             self.sync_menu(menu)
-            await ctx.send(f"created \"{channel_name}\".")
+            await ctx.respond(f"created \"{channel_name}\".")
         else:
-            await ctx.send(f"\"{channel_name}\" already exists.")
+            await ctx.respond(f"\"{channel_name}\" already exists.")
 
     @rolebot.command( name="delete",
                       description="delete channel from role bot",
                       guild_ids=settings.DISCORD_GUILD_IDS,
-                      permissions=Permissions.administrator,
                       default_permission=False)
+    @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
     @option("channel_name", description="#stuff", required=True)
     @slashcommandlogger
     async def rolebot_delete(self, ctx: discord.ApplicationContext, channel_name : str):
@@ -298,15 +299,15 @@ class RoleBot(commands.Cog):
 
         if modified:
             self.sync_menu(menu)
-            await ctx.send(f"deleted \"{channel_name}\".", hidden=True)
+            await ctx.respond(f"deleted \"{channel_name}\".", ephemeral=True)
         else:
-            await ctx.send(f"Could not find \"{channel_name}\".", hidden=True)
+            await ctx.respond(f"Could not find \"{channel_name}\".", ephemeral=True)
 
     @rolebot.command( name="show",
                       description="show rolebot static/running config",
                       guild_ids=settings.DISCORD_GUILD_IDS,
-                      permissions=Permissions.administrator,
                       default_permission=False)
+    @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
     @option(name="config_type", 
             description="Type of config", 
             required=False,
@@ -331,7 +332,7 @@ class RoleBot(commands.Cog):
             await ctx.respond(f"```{yaml.dump(menu)}```")
         else:
             message = f"{config_type} is an incorrect type"
-            await ctx.respond(message, hidden=True)
+            await ctx.respond(message, ephemeral=True)
             assert False, message
             
 

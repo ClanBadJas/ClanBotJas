@@ -90,7 +90,8 @@ class Commands(commands.Cog):
         await ctx.respond(content=f"Your id is: {ctx.author.id}", hidden=True)
 
     @commands.slash_command(name="purge", description="purge messages", guild_ids=settings.DISCORD_GUILD_IDS,
-                            permissions=Permissions.administrator, default_permission=False)
+                            default_permission=False)
+    @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
     @option(name="amount", 
         description="Amount of messages to purge", 
         required=True,
