@@ -2,13 +2,37 @@ import json
 import yaml
 
 import discord
+
+from discord import option, Permissions
 from discord.ext import commands
-from discord_components import Button
-from discord_slash import cog_ext, SlashContext
-from discord_slash.utils.manage_commands import create_option, create_choice
+from discord.commands import SlashCommandGroup
+from discord.commands.options import OptionChoice
 
 import settings
 from cogs.commands import slashcommandlogger
+
+
+class RoleButton(discord.ui.Button):
+    def __init__(self, 
+                 guild : discord.Guild, 
+                 role : discord.Role,
+                 channel_name : str):
+        super().__init__(label=role.name)
+        self.guild = guild
+        self.role = role
+        self.channel_name = channel_name
+
+    async def callback(self, interaction: discord.Interaction):
+        pass
+        # Toggle the role on the member
+        member = await self.guild.fetch_member(interaction.user.id)
+        if self.role in member.roles:
+            await member.remove_roles(self.role)
+            message = f"{self.channel_name} is onzichtbaar"
+        else:
+            await member.add_roles(self.role)
+            message = f"{self.channel_name} is zichtbaar"
+        await interaction.response.send_message(content=message, ephemeral=True)
 
 
 class RoleBot(commands.Cog):
@@ -22,6 +46,8 @@ class RoleBot(commands.Cog):
 
     def __init__(self, client):
         self.client = client
+
+    rolebot = SlashCommandGroup("rolebot", "Rolebot related commands")
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -47,31 +73,6 @@ class RoleBot(commands.Cog):
             await self.create_rolebot_messages(menu)
 
         await self.log_channel.send(":white_check_mark: Cog: \"rolebot\" ready.")
-
-    @commands.Cog.listener()
-    async def on_button_click(self, interaction):
-        """
-        Add the Role clicked by the user to the user
-        :param interaction: interaction context
-        :return:
-        """
-        # Make sure the button clicked contains a valid role id
-        try:
-            role_id = int(interaction.component.custom_id)
-        except ValueError:
-            return
-        if role_id not in self.menu:
-            return
-
-        # Toggle the role on the member
-        member = await self.guild.fetch_member(interaction.user.id)
-        role, channel_name = self.menu[role_id]
-        if role in member.roles:
-            await member.remove_roles(role)
-            await interaction.respond(content=f"{channel_name} is onzichtbaar")
-        else:
-            await member.add_roles(role)
-            await interaction.respond(content=f"{channel_name} is zichtbaar")
 
     @staticmethod
     def open_menu():
@@ -181,30 +182,21 @@ class RoleBot(commands.Cog):
         :param menujson: The config file
         :return:
         """
-        buttons = [[]]
-
+        view = discord.ui.View()
         channel = self.client.get_channel(settings.DISCORD_ROLEBOT_SETTINGS_CHANNEL)
         title = f"** {menujson['title']} **"
 
         # Create all of the button components
         async for role, channel_name in self.create_channels(menujson):
-            if len(buttons[-1]) > 4:
-                buttons.append([])
-
-            self.menu[role.id] = (role, channel_name,)
-            buttons[-1].append(Button(label=channel_name, custom_id=role.id))
-
-        # If there are no buttons create an empty message
-        if len(buttons[0]) == 0:
-            buttons = []
-
+            view.add_item(RoleButton(self.guild, role, channel_name))
+        
         # Replace an existing message
         async for message in channel.history():
             if title in message.content:
-                await message.edit(content=title, components=buttons)
+                await message.edit(content=title, view=view)
                 return
         # Create a new message
-        await channel.send(content=title, components=buttons)
+        await channel.send(content=title, view=view)
 
     '''
     SECTION:
@@ -253,18 +245,16 @@ class RoleBot(commands.Cog):
         category["channels"].append({"title": channel_name, "role": role_name})
         return True
 
-    @cog_ext.cog_subcommand(base="rolebot", name="add",
-                            description="Add channel to role bot",
-                            guild_ids=settings.DISCORD_GUILD_IDS,
-                            base_default_permission=False,
-                            base_permissions=settings.DISCORD_COMMAND_PERMISSIONS,
-                            options=[
-                                create_option(name="category_name", description="#stuff", option_type=3, required=True),
-                                create_option(name="channel_name", description="#stuff", option_type=3, required=True),
-                                create_option(name="role_name", description="#stuff", option_type=3, required=False),
-                            ])
+    @rolebot.command( name="add",
+                      description="Add channel to role bot",
+                      guild_ids=settings.DISCORD_GUILD_IDS,
+                      permissions=Permissions.administrator,
+                      default_permission=False)
+    @option("category_name", description="#stuff", required=True)
+    @option("channel_name", description="#stuff", required=True)
+    @option("role_name", description="#stuff", required=False)
     @slashcommandlogger
-    async def rolebot_add(self, ctx: SlashContext, category_name, channel_name, role_name=None):
+    async def rolebot_add(self, ctx: discord.ApplicationContext, category_name : str, channel_name : str, role_name : str):
         """
         Command for adding a new channel to the rolebot
         :param ctx: slash command context
@@ -279,20 +269,18 @@ class RoleBot(commands.Cog):
         modified = self.get_or_create_text_channel_menu(category, channel_name, role_name)
         if modified:
             self.sync_menu(menu)
-            await ctx.send(f"created \"{channel_name}\".", hidden=True)
+            await ctx.send(f"created \"{channel_name}\".")
         else:
-            await ctx.send(f"\"{channel_name}\" already exists.", hidden=True)
+            await ctx.send(f"\"{channel_name}\" already exists.")
 
-    @cog_ext.cog_subcommand(base="rolebot", name="delete",
-                            description="delete channel from role bot",
-                            guild_ids=settings.DISCORD_GUILD_IDS,
-                            base_default_permission=False,
-                            base_permissions=settings.DISCORD_COMMAND_PERMISSIONS,
-                            options=[
-                                create_option(name="channel_name", description="#stuff", option_type=3, required=True)
-                            ])
+    @rolebot.command( name="delete",
+                      description="delete channel from role bot",
+                      guild_ids=settings.DISCORD_GUILD_IDS,
+                      permissions=Permissions.administrator,
+                      default_permission=False)
+    @option("channel_name", description="#stuff", required=True)
     @slashcommandlogger
-    async def rolebot_delete(self, ctx: SlashContext, channel_name):
+    async def rolebot_delete(self, ctx: discord.ApplicationContext, channel_name : str):
         """
         Command for deleting a channel from the rolebot
         :param ctx:
@@ -314,17 +302,19 @@ class RoleBot(commands.Cog):
         else:
             await ctx.send(f"Could not find \"{channel_name}\".", hidden=True)
 
-    @cog_ext.cog_subcommand(base="rolebot", name="show",
-                            description="show rolebot static/running config",
-                            guild_ids=settings.DISCORD_GUILD_IDS,
-                            base_default_permission=False,
-                            base_permissions=settings.DISCORD_COMMAND_PERMISSIONS,
-                            options=[create_option(name="config_type", description="Type of config", option_type=3,
-                                                   required=False,
-                                                   choices=[create_choice(name="running", value="running"),
-                                                            create_choice(name="static", value="static")])])
+    @rolebot.command( name="show",
+                      description="show rolebot static/running config",
+                      guild_ids=settings.DISCORD_GUILD_IDS,
+                      permissions=Permissions.administrator,
+                      default_permission=False)
+    @option(name="config_type", 
+            description="Type of config", 
+            required=False,
+            choices=[ "running", "static" ],
+            default="static",
+    ) 
     @slashcommandlogger
-    async def rolebot_show(self, ctx: SlashContext, config_type: str = "static"):
+    async def rolebot_show(self, ctx: discord.ApplicationContext, config_type: str):
         """
         Show the running/static config in yaml format (More compact than JSON)
         :param ctx: original commoand context
@@ -334,13 +324,16 @@ class RoleBot(commands.Cog):
         menu = None
         if config_type == "running":
             menu = self.menujson
-        if config_type == "static":
+        elif config_type == "static":
             menu = self.open_menu()
 
         if menu:
-            await ctx.send(f"```{yaml.dump(menu)}```", hidden=True)
+            await ctx.respond(f"```{yaml.dump(menu)}```")
         else:
-            await ctx.send("Incorrect type.", hidden=True)
+            message = f"{config_type} is an incorrect type"
+            await ctx.respond(message, hidden=True)
+            assert False, message
+            
 
 
 def setup(client):

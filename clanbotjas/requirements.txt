@@ -1,7 +1,4 @@
-discord-components==1.1.4
-discord-py-slash-command
-discord-together
-discord.py
+pycord
 python-dotenv
 PyYAML
 Pillow

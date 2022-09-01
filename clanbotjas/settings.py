@@ -3,8 +3,7 @@ import os
 import discord
 import numpy as np
 from PIL import ImageFont, Image
-from discord_slash.model import SlashCommandPermissionType
-from discord_slash.utils.manage_commands import create_choice, create_permission
+from discord.commands.options import OptionChoice
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -27,17 +26,22 @@ DISCORD_ROLEBOT_SETTINGS_CHANNEL = _int(os.getenv('DISCORD_ROLEBOT_SETTINGS_CHAN
 DISCORD_COMMAND_PERMISSION_ROLE = _int(os.getenv('DISCORD_COMMAND_PERMISSION_ROLE'))
 
 DISCORD_GUILD_IDS = [DISCORD_GUILD_ID]
-INTENTS = discord.Intents(members=True, presences=True, voice_states=True, guild_messages=True, guilds=True)
-DISCORD_COGS = [
-    create_choice(name="rolebot", value="RoleBot"),
-    create_choice(name="commands", value="Commands"),
-    create_choice(name="voicechannelbot", value="VoiceChannelBot"),
-    create_choice(name="pollbot", value="PollBot"),
-]
+INTENTS = discord.Intents(
+    members=True, 
+    presences=True, 
+    voice_states=True, 
+    guild_messages=True, 
+    guilds=True, 
+    message_content = True
+)
 
-DISCORD_COMMAND_PERMISSIONS = {
-    DISCORD_GUILD_ID: [create_permission(DISCORD_COMMAND_PERMISSION_ROLE, SlashCommandPermissionType.ROLE, True),]
-}
+
+DISCORD_COGS = [
+    OptionChoice(name="rolebot", value="RoleBot"),
+    OptionChoice(name="commands", value="Commands"),
+    OptionChoice(name="voicechannelbot", value="VoiceChannelBot"),
+#    OptionChoice(name="pollbot", value="PollBot"),
+]
 
 DISCORD_TTF_SCALE_FACTOR = 10
 DISCORD_TTF_POLL_NORMAL = ImageFont.truetype("data/Helvetica.ttf", 15 * DISCORD_TTF_SCALE_FACTOR)

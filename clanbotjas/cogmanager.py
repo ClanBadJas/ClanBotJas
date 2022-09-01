@@ -1,10 +1,9 @@
 import functools
+from dotenv import load_dotenv
 
 import discord
 from discord.ext import commands
-from discord_components import DiscordComponents
-from discord_slash import SlashCommand
-from discord_slash.utils.manage_commands import create_option
+from discord import option, Permissions
 
 import settings
 
@@ -13,27 +12,13 @@ async def logCommand(channel, ctx, *args, **kwargs):
     log_string = ":arrow_forward: Command:  "
     log_string += ctx.channel.mention if isinstance(ctx.channel, discord.TextChannel) else "????"
     log_string += f" | {ctx.author}: /{ctx.command} "
-    if ctx.subcommand_name:
-        log_string += ctx.subcommand_name
-
+ 
     for k, v in kwargs.items():
         log_string += f" {k}: {v}"
     await channel.send(log_string)
 
 
-client = commands.Bot(command_prefix="!", intents=settings.INTENTS)
-slash = SlashCommand(client, sync_commands=True, sync_on_cog_reload=True, override_type=True)
-
-@client.event
-async def on_button_click(ctx):
-    logChannel = client.get_channel(settings.DISCORD_LOG_CHANNEL)
-    await logChannel.send(f":radio_button: Button clicked | {ctx.channel.mention} | {ctx.author} clicked ({ctx.component.label}).")
-@client.event
-async def on_select_option(ctx):
-    logChannel = client.get_channel(settings.DISCORD_LOG_CHANNEL)
-    opts = ", ".join([component.label for component in ctx.component])
-
-    await logChannel.send(f":ballot_box_with_check: Options selected | {ctx.channel.mention} | {ctx.author} selected: ({opts}).")
+client = commands.Bot(command_prefix=commands.when_mentioned_or("!"), intents=settings.INTENTS)
 
 
 @client.event
@@ -45,11 +30,9 @@ async def on_command_error(ctx, error):
     :return:
     """
     if isinstance(error, commands.MissingRole):
-        await ctx.send(f"{ctx.author.mention}, You do not have permissions to use that command.", hidden=True)
+        await ctx.repond(f"{ctx.author.mention}, You do not have permissions to use that command.", ephemeral=True)
     else:
         raise error
-
-
 
 def slashcommandlogger(func):
     """
@@ -66,17 +49,17 @@ def slashcommandlogger(func):
     return wrapped
 
 
-@slash.slash(name="load",
-             description="load a cog",
-             guild_ids=settings.DISCORD_GUILD_IDS,
-             permissions=settings.DISCORD_COMMAND_PERMISSIONS,
-             default_permission=False,
-             options=[
-                 create_option(name="cog", description="Select Cog", option_type=3, required=True,
-                               choices=settings.DISCORD_COGS)
-             ])
+@client.slash_command(description="load a cog",
+                      guild_ids=settings.DISCORD_GUILD_IDS,
+                      permissions=Permissions.administrator,
+                      default_permission=False)
+@option(name="cog", 
+        description="Select Cog", 
+        required=True,
+        choices=settings.DISCORD_COGS
+)
 @slashcommandlogger
-async def _load(ctx, cog: str):
+async def load(ctx: discord.ApplicationContext, cog: str):
     """
     Load a cog
     :param ctx:  slash command context
@@ -88,48 +71,48 @@ async def _load(ctx, cog: str):
         client.load_extension(f"cogs.{cog}")
         bot = client.get_cog(className)
         await bot.on_ready()
-        await ctx.send(f"Cog: \"{cog}\" loaded.", hidden=True)
-    except commands.errors.ExtensionAlreadyLoaded:
-        await ctx.send(f"Cog: \"{cog}\" already loaded.", hidden=True)
+        await ctx.respond(f"Cog: \"{cog}\" loaded.")
+    except discord.errors.ExtensionAlreadyLoaded:
+        await ctx.respond(f"Cog: \"{cog}\" already loaded.")
 
 
-@slash.slash(name="unload",
-             description="unload a cog",
-             guild_ids=settings.DISCORD_GUILD_IDS,
-             permissions=settings.DISCORD_COMMAND_PERMISSIONS,
-             default_permission=False,
-             options=[
-                 create_option(name="cog", description="Select Cog", option_type=3, required=True,
-                               choices=settings.DISCORD_COGS)
-             ])
+
+@client.slash_command(description="unload a cog",
+                      guild_ids=settings.DISCORD_GUILD_IDS,
+                      permissions=Permissions.administrator,
+                      default_permission=False)
+@option(name="cog", 
+        description="Select Cog", 
+        required=True,
+        choices=settings.DISCORD_COGS
+)
 @slashcommandlogger
-async def _unload(ctx, cog: str):
+async def unload(ctx, cog: str):
     """
     Unload a cog
     :param ctx: Original slash command context
     :param cog: Name of the cog to unload
     :return:
     """
-    cog, className = cog.lower(), cog
+    cog = cog.lower()
     try:
         client.unload_extension(f"cogs.{cog}")
-        await ctx.send(f"Cog: \"{cog}\" unloaded.", hidden=True)
+        await ctx.respond(f"Cog: \"{cog}\" unloaded.")
         await client.get_channel(settings.DISCORD_LOG_CHANNEL).send(f":negative_squared_cross_mark: Cog: \"{cog}\" unloaded.")
-    except commands.errors.ExtensionNotLoaded:
-        await ctx.send(f"Cog: \"{cog}\" not loaded.", hidden=True)
+    except discord.errors.ExtensionNotLoaded:
+        await ctx.respond(f"Cog: \"{cog}\" not loaded.")
 
-
-@slash.slash(name="reload",
-             description="reload a cog",
-             guild_ids=settings.DISCORD_GUILD_IDS,
-             permissions=settings.DISCORD_COMMAND_PERMISSIONS,
-             default_permission=False,
-             options=[
-                 create_option(name="cog", description="Select Cog", option_type=3, required=True,
-                               choices=settings.DISCORD_COGS)
-             ])
+@client.slash_command(description="reload a cog",
+                      guild_ids=settings.DISCORD_GUILD_IDS,
+                      permissions=Permissions.administrator,
+                      default_permission=False)
+@option(name="cog", 
+        description="Select Cog", 
+        required=True,
+        choices=settings.DISCORD_COGS
+)
 @slashcommandlogger
-async def _reload(ctx, cog: str):
+async def reload(ctx, cog: str):
     """
     Reload a cog
     :param ctx:  original slash command context
@@ -141,7 +124,7 @@ async def _reload(ctx, cog: str):
     try:
         client.unload_extension(f"cogs.{cog}")
         await client.get_channel(settings.DISCORD_LOG_CHANNEL).send(f":negative_squared_cross_mark: Cog: \"{cog}\" unloaded.")
-    except commands.errors.ExtensionNotLoaded:
+    except discord.errors.ExtensionNotLoaded:
         pass
 
     # Load the cog
@@ -154,7 +137,6 @@ async def _reload(ctx, cog: str):
 if __name__ == "__main__":
     # Load all cogs
     for cog in settings.DISCORD_COGS:
-        client.load_extension(f'cogs.{cog["name"]}')
+        client.load_extension(f'cogs.{cog.name}')
 
-    DiscordComponents(client)
     client.run(settings.DISCORD_TOKEN)

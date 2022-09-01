@@ -5,13 +5,7 @@ from enum import Enum
 import discord
 import numpy as np
 from PIL import Image, ImageDraw
-from discord_slash.utils.manage_components import create_select, create_select_option, create_actionrow, create_button
-from discord_slash.utils.manage_commands import create_option, create_choice
-from discord_slash import SlashContext, cog_ext
-from discord_slash.model import ButtonStyle
-from discord.ext import commands
-from discord_components import InteractionType
-import discord_components
+
 
 import cogmanager
 import settings
