@@ -1,5 +1,4 @@
 import functools
-from tkinter import W
 from dotenv import load_dotenv
 
 import discord

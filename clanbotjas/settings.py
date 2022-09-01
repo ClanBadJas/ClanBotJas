@@ -16,14 +16,15 @@ def _int(name: str):
         return name
 
 
-DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+DISCORD_TOKEN = os.getenv('BOT_TOKEN')
 
-DISCORD_GUILD_ID = _int(os.getenv('DISCORD_GUILD_ID'))
+DISCORD_GUILD_ID = _int(os.getenv('GUILD_ID'))
 DISCORD_VOICE_CHANNEL_DEFAULT_NAME = os.getenv("VOICE_CHANNEL_DEFAULT_NAME")
-DISCORD_VOICE_CHANNEL_CATEGORY = _int(os.getenv('DISCORD_VOICE_CHANNEL_CATEGORY'))
-DISCORD_LOG_CHANNEL = _int(os.getenv('DISCORD_LOG_CHANNEL'))
-DISCORD_ROLEBOT_SETTINGS_CHANNEL = _int(os.getenv('DISCORD_ROLEBOT_SETTINGS_CHANNEL'))
-DISCORD_COMMAND_PERMISSION_ROLE = _int(os.getenv('DISCORD_COMMAND_PERMISSION_ROLE'))
+DISCORD_VOICE_CHANNEL_CATEGORY = _int(os.getenv('VOICE_CHANNEL_CATEGORY'))
+DISCORD_LOG_CHANNEL = _int(os.getenv('LOG_CHANNEL'))
+DISCORD_ROLEBOT_SETTINGS_CHANNEL = _int(os.getenv('ROLEBOT_SETTINGS_CHANNEL'))
+DISCORD_COMMAND_PERMISSION_ROLE = _int(os.getenv('COMMAND_PERMISSION_ROLE'))
+DISCORD_AUTO_ROLES = os.getenv("AUTO_ROLES")
 
 DISCORD_GUILD_IDS = [DISCORD_GUILD_ID]
 INTENTS = discord.Intents(
@@ -41,6 +42,7 @@ DISCORD_COGS = [
     OptionChoice(name="commands", value="Commands"),
     OptionChoice(name="voicechannelbot", value="VoiceChannelBot"),
 #    OptionChoice(name="pollbot", value="PollBot"),
+    OptionChoice(name="autorole", value="AutoRole"),
 ]
 
 DISCORD_TTF_SCALE_FACTOR = 10

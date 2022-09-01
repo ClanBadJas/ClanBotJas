@@ -1,5 +1,4 @@
 import json
-from tkinter import W
 import yaml
 
 import discord
@@ -29,10 +28,10 @@ class RoleButton(discord.ui.Button):
         member = await self.guild.fetch_member(interaction.user.id)
         if self.role in member.roles:
             await member.remove_roles(self.role)
-            message = f"{self.channel_name} is onzichtbaar"
+            message = f"{self.channel_name} is now invisible."
         else:
             await member.add_roles(self.role)
-            message = f"{self.channel_name} is zichtbaar"
+            message = f"{self.channel_name} is now visible."
         await interaction.response.send_message(content=message, ephemeral=True)
 
 
