@@ -25,7 +25,7 @@ jobs:
       run: docker build . --file Dockerfile --tag clanbadjas/clanbotjas-dev:$(date +%s) --tag clanbadjas/clanbotjas-dev:latest
     
     - name: Docker Push latest tag
-      run: docker push clanbotjas/clabotjas-dev:latest
+      run: docker push clanbotjas/clanbotjas-dev:latest
       
     - name: Docker Push timestamp tag
-      run: docker push clanbotjas/clabotjas-dev:$(date +%s)
+      run: docker push clanbotjas/clanbotjas-dev:$(date +%s)
