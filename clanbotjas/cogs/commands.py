@@ -83,7 +83,7 @@ class Commands(commands.Cog):
     @slashcommandlogger
     async def getid(self, ctx: discord.ApplicationContext):
         """
-        Give the user its ID.
+        Prints the User ID of the requester
         :param ctx: Object of the original command
         :return:
         """

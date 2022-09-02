@@ -44,7 +44,7 @@ class AutoRole(commands.Cog):
         await self.logChannel.send(":white_check_mark: Cog: \"autorole\" ready.")
 
     """
-    When someone joins the server, cycle through the configured roles.
+    When new member joins the server, cycle through the configured roles.
     Get the role ID of the roles by name.
     Add the role to the newly joined member.
     :return:

@@ -13,25 +13,36 @@ from cogs.commands import slashcommandlogger
 
 
 class RoleButton(discord.ui.Button):
-    def __init__(self, 
-                 guild : discord.Guild, 
+    log_channel = None
+    settings_channel = None
+
+    def __init__(self,
+                 guild : discord.Guild,
                  role : discord.Role,
-                 channel_name : str):
+                 channel_name : str,
+                 client):
         super().__init__(label=role.name)
+        self.client = client
         self.guild = guild
         self.role = role
         self.channel_name = channel_name
 
     async def callback(self, interaction: discord.Interaction):
         pass
+
+        self.settings_channel = self.client.get_channel(settings.DISCORD_ROLEBOT_SETTINGS_CHANNEL)
+        self.log_channel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
+
         # Toggle the role on the member
         member = await self.guild.fetch_member(interaction.user.id)
         if self.role in member.roles:
             await member.remove_roles(self.role)
             message = f"{self.channel_name} is now invisible."
+            await self.log_channel.send(f":radio_button: Button clicked | {self.settings_channel.mention} | {member.name} removed role \"{self.role.name}\".")
         else:
             await member.add_roles(self.role)
             message = f"{self.channel_name} is now visible."
+            await self.log_channel.send(f":radio_button: Button clicked | {self.settings_channel.mention} | {member.name} added role \"{self.role.name}\".")
         await interaction.response.send_message(content=message, ephemeral=True)
 
 
@@ -77,7 +88,7 @@ class RoleBot(commands.Cog):
     @staticmethod
     def open_menu():
         """
-        Open the menu file that represent the roles
+        Open the menu file that represents the categories and roles
         :return:
         """
         try:
@@ -143,7 +154,7 @@ class RoleBot(commands.Cog):
     async def get_or_create_text_channel(self, text_channel_name, category, role):
         """
         Function that returns the text channel by name if it exists.
-        Otherwise, it gets created in the category and can only be viewed with the given role.
+        If it doesn't, it will be created in the corresponding category and can only be viewed with the given role.
 
         :param text_channel_name: The name of the text channel te be created
         :param category: The category the channel will be posted in.
@@ -161,10 +172,10 @@ class RoleBot(commands.Cog):
 
     async def create_channels(self, menujson):
         """
-        Synchronize the menujson file with the discord channels.
-        yield the role and channel name.
+        Synchronize the menu.json file with the discord channels.
+        Yield the role and channel name.
 
-        :param menujson: Menu json
+        :param menujson: The config file
         :return:
         """
 
@@ -182,14 +193,14 @@ class RoleBot(commands.Cog):
         :param menujson: The config file
         :return:
         """
-        view = discord.ui.View()
+        view = discord.ui.View(timeout=None)
         channel = self.client.get_channel(settings.DISCORD_ROLEBOT_SETTINGS_CHANNEL)
         title = f"** {menujson['title']} **"
 
         # Create all of the button components
         async for role, channel_name in self.create_channels(menujson):
-            view.add_item(RoleButton(self.guild, role, channel_name))
-        
+            view.add_item(RoleButton(self.guild, role, channel_name, self.client))
+
         # Replace an existing message
         async for message in channel.history():
             if title in message.content:
@@ -206,7 +217,7 @@ class RoleBot(commands.Cog):
     @staticmethod
     def sync_menu(menu):
         """
-        Write the menu to the menu.json file
+        Write the menu to file
         :param menu:
         :return:
         """
@@ -235,7 +246,7 @@ class RoleBot(commands.Cog):
         Create a channel in the category, return success status
         :param category: category containing channels
         :param channel_name: name of the channel
-        :param role_name: name of the rol
+        :param role_name: name of the role
         :return:  True if Channel exists, False if channel was created
         """
         for channel in category["channels"]:
@@ -269,12 +280,12 @@ class RoleBot(commands.Cog):
         modified = self.get_or_create_text_channel_menu(category, channel_name, role_name)
         if modified:
             self.sync_menu(menu)
-            await ctx.respond(f"created \"{channel_name}\".")
+            await ctx.respond(f"Created \"{channel_name}\".")
         else:
             await ctx.respond(f"\"{channel_name}\" already exists.")
 
     @rolebot.command( name="delete",
-                      description="delete channel from role bot",
+                      description="Delete channel from role bot",
                       guild_ids=settings.DISCORD_GUILD_IDS,
                       default_permission=False)
     @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
@@ -283,8 +294,8 @@ class RoleBot(commands.Cog):
     async def rolebot_delete(self, ctx: discord.ApplicationContext, channel_name : str):
         """
         Command for deleting a channel from the rolebot
-        :param ctx:
-        :param channel_name:
+        :param ctx: slash command context
+        :param channel_name: name of the channel
         :return:
         """
         modified = False
@@ -298,26 +309,26 @@ class RoleBot(commands.Cog):
 
         if modified:
             self.sync_menu(menu)
-            await ctx.respond(f"deleted \"{channel_name}\".", ephemeral=True)
+            await ctx.respond(f"Deleted \"{channel_name}\".", ephemeral=True)
         else:
             await ctx.respond(f"Could not find \"{channel_name}\".", ephemeral=True)
 
     @rolebot.command( name="show",
-                      description="show rolebot static/running config",
+                      description="Show rolebot static/running config",
                       guild_ids=settings.DISCORD_GUILD_IDS,
                       default_permission=False)
     @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
-    @option(name="config_type", 
-            description="Type of config", 
+    @option(name="config_type",
+            description="Type of config",
             required=False,
             choices=[ "running", "static" ],
             default="static",
-    ) 
+    )
     @slashcommandlogger
     async def rolebot_show(self, ctx: discord.ApplicationContext, config_type: str):
         """
         Show the running/static config in yaml format (More compact than JSON)
-        :param ctx: original commoand context
+        :param ctx: original command context
         :param config_type: static/running config
         :return:
         """
@@ -330,10 +341,9 @@ class RoleBot(commands.Cog):
         if menu:
             await ctx.respond(f"```{yaml.dump(menu)}```")
         else:
-            message = f"{config_type} is an incorrect type"
+            message = f"{config_type} is an incorrect type."
             await ctx.respond(message, ephemeral=True)
             assert False, message
-            
 
 
 def setup(client):

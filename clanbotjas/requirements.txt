@@ -1,4 +1,4 @@
-py-cord
+wheel/py_cord-2.1.1-py3-none-any.whl
 python-dotenv
 PyYAML
 Pillow
