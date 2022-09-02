@@ -42,7 +42,7 @@ class VoiceChannelBot(commands.Cog):
             channels.add(after.channel)
 
         await self.sync_channel_names(channels)
-        # Make sure This is not an event within the same channel
+        # Make sure this is not an event within the same channel
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
@@ -60,7 +60,7 @@ class VoiceChannelBot(commands.Cog):
 
     async def sync_channel_names(self, args):
         """
-        Make sure all voice channels in the args have the right voice channel names
+        Make sure all voice channels in the args have the correct voice channel names
         :param args:
         :return:
         """
@@ -75,8 +75,8 @@ class VoiceChannelBot(commands.Cog):
 
     async def autoscale(self):
         """
-        Get all empty channels.
-        Delete  empty channels if there is more than one.
+        Get all empty channels
+        Delete empty channels if there is more than one
         If no empty channels exist, create one
         Manually create a channel if none exist
         :return:
@@ -86,7 +86,7 @@ class VoiceChannelBot(commands.Cog):
         empty_channel = None
         delete_channels = []
 
-        # if all empty channels
+        # add empty voice channels to the delete list
         for voice_channel in voice_channels:
             if not voice_channel.members:
                 if not empty_channel:

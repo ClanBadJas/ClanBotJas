@@ -1,5 +1,4 @@
 import functools
-from tkinter import W
 from dotenv import load_dotenv
 
 import discord
@@ -23,9 +22,9 @@ client = commands.Bot(command_prefix=commands.when_mentioned_or("!"), intents=se
 @client.event
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
     """
-    Give feedback to the user when he has no rights to use the command
-    :param ctx: original command context
-    :param error: Eroor
+    Give feedback to the user when user has no perms to use the command
+    :param ctx: Original command context
+    :param error: Error
     :return:
     """
 
@@ -37,9 +36,9 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
 @client.event
 async def on_application_command_error(ctx: commands.Context, error: commands.CommandError):
     """
-    Give feedback to the user when he has no rights to use the command
-    :param ctx: original command context
-    :param error: Eroor
+    Give feedback to the user when user has no perms to use the command
+    :param ctx: Original command context
+    :param error: Error
     :return:
     """
     await on_command_error(ctx, error)
@@ -71,8 +70,8 @@ def slashcommandlogger(func):
 async def load(ctx: discord.ApplicationContext, cog: str):
     """
     Load a cog
-    :param ctx:  slash command context
-    :param cog: name of the cog
+    :param ctx: Original slash command context
+    :param cog: Name of the cog to load
     :return:
     """
     cog, className = cog.lower(), cog
@@ -122,7 +121,7 @@ async def unload(ctx, cog: str):
 async def reload(ctx, cog: str):
     """
     Reload a cog
-    :param ctx:  original slash command context
+    :param ctx: Original slash command context
     :param cog: Name of the cog to reload
     :return:
     """

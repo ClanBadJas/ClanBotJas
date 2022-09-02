@@ -2,9 +2,9 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "development" ]
+    branches: [ "dev" ]
   pull_request:
-    branches: [ "development" ]
+    branches: [ "dev" ]
 
 jobs:
 
@@ -22,7 +22,7 @@ jobs:
         docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
     
     - name: Docker Build
-      run: docker build . --file Dockerfile --tag clanbadjas/clanbotjas-dev:$(date +%s) --tag clanbadjas/clanbotjas-dev:latest
+      run: docker build . --file Dockerfile --tag clanbadjas/clanbotjas-dev:latest
     
-    - name: Docker Push
-      run: docker push clanbotjas/clabotjas-dev --all-tags
+    - name: Docker Push latest tag
+      run: docker push clanbadjas/clanbotjas-dev:latest
