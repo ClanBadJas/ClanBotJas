@@ -28,8 +28,6 @@ class RoleButton(discord.ui.Button):
         self.channel_name = channel_name
 
     async def callback(self, interaction: discord.Interaction):
-        pass
-
         self.settings_channel = self.client.get_channel(settings.DISCORD_ROLEBOT_SETTINGS_CHANNEL)
         self.log_channel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
 

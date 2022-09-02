@@ -1,53 +1,70 @@
 import functools
 import io
 from enum import Enum
+from logging import PlaceHolder
 
 import discord
 import numpy as np
 from PIL import Image, ImageDraw
 
+from discord.ext import commands
+from discord import option
+from discord.commands.options import OptionChoice       
 
 import cogmanager
 import settings
-
 
 class PercentageMode:
     CUMULATIVE = 0
     RESPONDENT = 1
 
+class PollSelect(discord.ui.Select):
+    async def callback(self, interaction: discord.Interaction):
+        """
+        When a voter selected new options
+        """
+        # Update the voter indices and update the original poll message
+        indices = np.array([int(component) for component in self.values])
+        self.view.update_user(interaction.user, indices)
 
-poll_options = [create_option(name="description", description="Poll description", option_type=3, required=True),
-                create_option(name="max_values", description="Maximum options the voter can select", option_type=4,
-                              required=False),
-                create_option(name="percentage_mode", description="Percentage calculation mode", option_type=4,
-                              required=False,
-                              choices=[create_choice(name="cumulative", value=PercentageMode.CUMULATIVE),
-                                       create_choice(name="respondent", value=PercentageMode.RESPONDENT)]),
-                create_option(name=f"option0", description="option", option_type=3, required=False),
-                create_option(name=f"option1", description="option", option_type=3, required=False),
-                create_option(name=f"option2", description="option", option_type=3, required=False),
-                create_option(name=f"option3", description="option", option_type=3, required=False),
-                create_option(name=f"option4", description="option", option_type=3, required=False),
-                create_option(name=f"option5", description="option", option_type=3, required=False),
-                create_option(name=f"option6", description="option", option_type=3, required=False),
-                create_option(name=f"option7", description="option", option_type=3, required=False),
-                create_option(name=f"option8", description="option", option_type=3, required=False),
-                create_option(name=f"option9", description="option", option_type=3, required=False)
-                ]
+        await interaction.response.edit_message(embed=self.view.create_embed())
 
+class PollButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(label="Finish poll"),
 
-class Poll(object):
+    async def callback(self, interaction: discord.Interaction):
+        
+        # If the poll is old deactivate it without further action
+        # Check if the person who clicked the button is the original author
+        if self.view.user.id != interaction.user.id:
+            await interaction.respond(content="You did not create the poll.")
+            return
+        # Button needs to be deactivated
+        for item in self.view.children:
+           item.disabled = True
+        # Original polls
+        await interaction.response.edit_message(embed=self.view.create_embed(), view=self.view)
+        await interaction.message.reply(content=f"> {self.view.description}", file=self.view.results())
+
+class PollView(discord.ui.View):
     """
     Object that contains state information about ongoing polls, this information is lost when te server is restarted
     """
     def __init__(self, user, description, percentage_mode, max_values, opts):
+        super().__init__(timeout=None) # timeout of the view must be set to None
+       
         self.description = description
         self.user = user
         self.user_options = {}
         self.percentage_mode = percentage_mode
-        self.options = np.array(list(opts.values()))
+        self.options = np.array(list(opts))
         self.max_values = min(self.options.size, max_values)
-        pass
+        
+        options = [discord.SelectOption(label=name, value=str(i)) for i, name in enumerate(self.options)]
+        description = f"select up to {self.max_values} option(s)"
+        self.add_item(PollSelect(placeholder=description, min_values=1, max_values=self.max_values, options=options))
+        self.add_item(PollButton())
 
     def update_user(self, user, values):
         """
@@ -70,7 +87,7 @@ class Poll(object):
         votes = "\n".join([str(i) for i in height])
 
         embed = discord.Embed(title=self.description)
-        embed.set_author(name=self.user.name, icon_url=self.user.avatar_url)
+        embed.set_author(name=self.user.name, icon_url=self.user.avatar.url)
         embed.add_field(name="Option", value=options, inline=True)
         embed.add_field(name="Votes", value=votes, inline=True)
         return embed
@@ -147,15 +164,6 @@ class Poll(object):
             self._draw_text(draw, bar_width, bar_y, self.options[i], f"{percentage}%", max == percentage)
         return image
 
-    def get_components(self):
-        """
-        Turn the different option names into components for a select menu
-        :return:
-        """
-        options = [create_select_option(label=name, value=str(i)) for i, name in enumerate(self.options)]
-        return create_actionrow(
-            create_select(options, placeholder=f"select up to {self.max_values} option(s)", max_values=self.max_values))
-
 
 def slashcommandlogger(func):
     @functools.wraps(func)
@@ -172,16 +180,38 @@ class PollBot(commands.Cog):
 
     def __init__(self, client):
         self.client = client
-        self.poll_map = {}
 
     @commands.Cog.listener()
     async def on_ready(self):
         await self.client.get_channel(settings.DISCORD_LOG_CHANNEL).send(":white_check_mark: Cog: \"pollbot\" ready.")
 
-    @cog_ext.cog_slash(name="createpoll", description="Create a poll",
-                       guild_ids=settings.DISCORD_GUILD_IDS, options=poll_options)
+
+    @commands.slash_command(name="createpoll", description="Create a poll", guild_ids=settings.DISCORD_GUILD_IDS,
+                            default_permission=False)
+    @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
+    @option(name="description", description="Poll description", required=True)
+    @option(name="max_values", description="Maximum options the voter can select",required=False)
+    @option(name="percentage_mode", description="Percentage calculation mode",required=False,
+            choices=[OptionChoice(name="cumulative", value=PercentageMode.CUMULATIVE),
+                     OptionChoice(name="respondent", value=PercentageMode.RESPONDENT)])
+    @option(name=f"option0", description="option", required=False)
+    @option(name=f"option1", description="option", required=False)
+    @option(name=f"option2", description="option", required=False)
+    @option(name=f"option3", description="option", required=False)
+    @option(name=f"option4", description="option", required=False)
+    @option(name=f"option5", description="option", required=False)
+    @option(name=f"option6", description="option", required=False)
+    @option(name=f"option7", description="option", required=False)
+    @option(name=f"option8", description="option", required=False)
+    @option(name=f"option9", description="option", required=False)
     @slashcommandlogger
-    async def _createpoll(self, ctx, description, max_values=1, percentage_mode=PercentageMode.CUMULATIVE, **opts):
+    async def _createpoll(self, ctx: discord.ApplicationContext, 
+                          description: str,  max_values: int = 1, 
+                          percentage_mode: int=PercentageMode.CUMULATIVE, 
+                          option0: str = None, option1: str = None, option2: str = None, 
+                          option3: str = None, option4: str = None, option5: str = None, 
+                          option6: str = None, option7: str = None, option8: str = None, 
+                          option9: str = None):
         """
         Create a poll with the user selected options
 
@@ -191,76 +221,13 @@ class PollBot(commands.Cog):
         :param percentage_mode: Either cumulative or respondent
         :param opts: all of the poll options
         :return:
-        """
+        """   
+        opts = [option0, option1, option2, option3, option4, option5, option6, option7, option8, option9]
+        opts = list(filter(lambda item: item is not None, opts))
         if len(opts) == 0:
-            return await ctx.send(content="Please provide arguments", hidden=True)
-        poll = Poll(ctx.author, description, percentage_mode, max_values, opts)
-        components = [poll.get_components(), create_actionrow(create_button(ButtonStyle.grey, "Finish poll", custom_id="poll"))]
-        message = await ctx.send(embed=poll.create_embed(), components=components, hidden=False)
-        self.poll_map[message.id] = poll
-
-    @staticmethod
-    def disable_components(components):
-        for interaction_row in components:
-            for component in interaction_row:
-                component.disabled = True
-                if isinstance(component, discord_components.Button):
-                    component.label = "Poll closed"
-
-
-    @commands.Cog.listener()
-    async def on_select_option(self, interaction):
-        """
-        When a voter selected new options
-        """
-        # Make sure the poll is current
-        if interaction.message.id not in self.poll_map:
-            components = interaction.message.components
-            self.disable_components(components)
-
-            # Deactivate the poll and give feedback to voter
-            await interaction.message.edit(components=components)
-            await interaction.respond(content="State information on this poll is lost in the ether.")
-            return
-
-        # Update the voter indices and update the original poll message
-        indices = np.array([int(component.value) for component in interaction.component])
-        poll = self.poll_map[interaction.message.id]
-        poll.update_user(interaction.author, indices)
-
-        await interaction.respond(type=InteractionType.UpdateMessage, embed=poll.create_embed())
-
-    @commands.Cog.listener()
-    async def on_button_click(self, interaction):
-        """
-
-
-        :param interaction: Information on what buttons was clicked, by what user etc...
-        :return:
-        """
-        if interaction.custom_id != "poll":
-            return
-        # Button needs to be deactivated
-        components = interaction.message.components
-        self.disable_components(components)
-
-
-        # If the poll is old deactivate it without further action
-        if interaction.message.id not in self.poll_map:
-            await interaction.message.edit(components=components)
-            await interaction.respond(content="State information on this poll is lost in the ether.")
-            return
-
-        # Check if the person who clicked the button is the original author
-        poll = self.poll_map[interaction.message.id]
-        if poll.user.id != interaction.author.id:
-            await interaction.respond(content="You did not create the poll.")
-            return
-
-        # Original polls
-        await interaction.respond(type=7, components=components)
-        await interaction.message.reply(content=f"> {poll.description}", file=poll.results())
-
+            return await ctx.respond(content="Please provide arguments", ephemeral=True)
+        poll = PollView(ctx.author, description, percentage_mode, max_values, opts)
+        await ctx.respond(embed=poll.create_embed(), view=poll)
 
 def setup(client):
     client.add_cog(PollBot(client))
