@@ -1,4 +1,3 @@
-import discord
 from discord.ext import commands
 from discord.utils import get
 
@@ -6,7 +5,7 @@ import settings
 
 
 class AutoRole(commands.Cog):
-    guild= None
+    guild = None
     roleMap = {}
     autoRoles = []
     logChannel = None
@@ -38,10 +37,12 @@ class AutoRole(commands.Cog):
         """
         for i in self.autoRoles:
             if i not in self.roleMap:
-                await self.logChannel.send("Discord AutoRole cog failed: One or more configured roles are missing on the server.")
+                await self.logChannel.send(
+                    "Discord AutoRole cog failed: One or more configured roles are missing on the server."
+                )
                 return
 
-        await self.logChannel.send(":white_check_mark: Cog: \"autorole\" ready.")
+        await self.logChannel.send(':white_check_mark: Cog: "autorole" ready.')
 
     """
     When new member joins the server, cycle through the configured roles.
@@ -49,13 +50,17 @@ class AutoRole(commands.Cog):
     Add the role to the newly joined member.
     :return:
     """
+
     @commands.Cog.listener()
     async def on_member_join(self, member):
         for i in self.autoRoles:
             role = get(self.guild.roles, name=i)
             await member.add_roles(role)
         roles = settings.DISCORD_AUTO_ROLES
-        await self.logChannel.send(f":ballot_box_with_check: Roles: \"{roles}\" added for new user {member.name}.")
+        await self.logChannel.send(
+            f':ballot_box_with_check: Roles: "{roles}" added for new user {member.name}.'
+        )
+
 
 def setup(client):
     client.add_cog(AutoRole(client))

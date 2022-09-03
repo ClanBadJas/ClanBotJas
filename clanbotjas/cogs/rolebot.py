@@ -2,25 +2,21 @@ import json
 import yaml
 
 import discord
-
-from discord import option, Permissions
+from discord import option
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
-from discord.commands.options import OptionChoice
 
 import settings
-from cogs.commands import slashcommandlogger
+from cogManagerMixin import commandlogger, LogButton
 
 
-class RoleButton(discord.ui.Button):
+class RoleButton(LogButton):
     log_channel = None
     settings_channel = None
 
-    def __init__(self,
-                 guild : discord.Guild,
-                 role : discord.Role,
-                 channel_name : str,
-                 client):
+    def __init__(
+        self, guild: discord.Guild, role: discord.Role, channel_name: str, client
+    ):
         super().__init__(label=role.name)
         self.client = client
         self.guild = guild
@@ -28,22 +24,17 @@ class RoleButton(discord.ui.Button):
         self.channel_name = channel_name
 
     async def callback(self, interaction: discord.Interaction):
-        pass
-
-        self.settings_channel = self.client.get_channel(settings.DISCORD_ROLEBOT_SETTINGS_CHANNEL)
-        self.log_channel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
-
         # Toggle the role on the member
         member = await self.guild.fetch_member(interaction.user.id)
         if self.role in member.roles:
             await member.remove_roles(self.role)
             message = f"{self.channel_name} is now invisible."
-            await self.log_channel.send(f":radio_button: Button clicked | {self.settings_channel.mention} | {member.name} removed role \"{self.role.name}\".")
         else:
             await member.add_roles(self.role)
             message = f"{self.channel_name} is now visible."
-            await self.log_channel.send(f":radio_button: Button clicked | {self.settings_channel.mention} | {member.name} added role \"{self.role.name}\".")
+
         await interaction.response.send_message(content=message, ephemeral=True)
+        await super().callback(interaction)
 
 
 class RoleBot(commands.Cog):
@@ -77,13 +68,15 @@ class RoleBot(commands.Cog):
 
         self.menujson = self.open_menu()
         if not self.menujson:
-            await self.log_channel.send("Discord button cog failed: Couldn't read menu.json.")
+            await self.log_channel.send(
+                "Discord button cog failed: Couldn't read menu.json."
+            )
             return
         # create text settings text messages.
         for menu in self.menujson:
             await self.create_rolebot_messages(menu)
 
-        await self.log_channel.send(":white_check_mark: Cog: \"rolebot\" ready.")
+        await self.log_channel.send(':white_check_mark: Cog: "rolebot" ready.')
 
     @staticmethod
     def open_menu():
@@ -92,7 +85,7 @@ class RoleBot(commands.Cog):
         :return:
         """
         try:
-            f = open('data/menu.json', 'r')
+            f = open("data/menu.json", "r")
         except IOError:
             return None
         else:
@@ -165,10 +158,14 @@ class RoleBot(commands.Cog):
             return self.text_channel_map[text_channel_name]
         else:
             overwrites = {
-                self.guild.default_role: discord.PermissionOverwrite(read_messages=False),
-                role: discord.PermissionOverwrite(read_messages=True)
+                self.guild.default_role: discord.PermissionOverwrite(
+                    read_messages=False
+                ),
+                role: discord.PermissionOverwrite(read_messages=True),
             }
-            return await self.guild.create_text_channel(text_channel_name, category=category, overwrites=overwrites)
+            return await self.guild.create_text_channel(
+                text_channel_name, category=category, overwrites=overwrites
+            )
 
     async def create_channels(self, menujson):
         """
@@ -183,7 +180,9 @@ class RoleBot(commands.Cog):
 
         for text_channel_json in menujson["channels"]:
             role = await self.get_or_create_role(text_channel_json["role"])
-            await self.get_or_create_text_channel(text_channel_json["title"], category, role)
+            await self.get_or_create_text_channel(
+                text_channel_json["title"], category, role
+            )
 
             yield role, "#" + text_channel_json["title"]
 
@@ -209,10 +208,10 @@ class RoleBot(commands.Cog):
         # Create a new message
         await channel.send(content=title, view=view)
 
-    '''
+    """
     SECTION:
     All rolebot related commands
-    '''
+    """
 
     @staticmethod
     def sync_menu(menu):
@@ -221,7 +220,7 @@ class RoleBot(commands.Cog):
         :param menu:
         :return:
         """
-        with open('data/menu.json', 'w', encoding='utf-8') as f:
+        with open("data/menu.json", "w", encoding="utf-8") as f:
             json.dump(menu, f, ensure_ascii=True, indent=4)
 
     @staticmethod
@@ -256,16 +255,24 @@ class RoleBot(commands.Cog):
         category["channels"].append({"title": channel_name, "role": role_name})
         return True
 
-    @rolebot.command( name="add",
-                      description="Add channel to role bot",
-                      guild_ids=settings.DISCORD_GUILD_IDS,
-                      default_permission=False)
+    @rolebot.command(
+        name="add",
+        description="Add channel to role bot",
+        guild_ids=settings.DISCORD_GUILD_IDS,
+        default_permission=False,
+    )
     @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
     @option("category_name", description="#stuff", required=True)
     @option("channel_name", description="#stuff", required=True)
     @option("role_name", description="#stuff", required=False)
-    @slashcommandlogger
-    async def rolebot_add(self, ctx: discord.ApplicationContext, category_name : str, channel_name : str, role_name : str):
+    @commandlogger
+    async def rolebot_add(
+        self,
+        ctx: discord.ApplicationContext,
+        category_name: str,
+        channel_name: str,
+        role_name: str,
+    ):
         """
         Command for adding a new channel to the rolebot
         :param ctx: slash command context
@@ -277,21 +284,25 @@ class RoleBot(commands.Cog):
         role_name = role_name if role_name else channel_name
         menu = self.open_menu()
         category = self.get_or_create_category_menu(menu, category_name)
-        modified = self.get_or_create_text_channel_menu(category, channel_name, role_name)
+        modified = self.get_or_create_text_channel_menu(
+            category, channel_name, role_name
+        )
         if modified:
             self.sync_menu(menu)
-            await ctx.respond(f"Created \"{channel_name}\".")
+            await ctx.respond(f'Created "{channel_name}".')
         else:
-            await ctx.respond(f"\"{channel_name}\" already exists.")
+            await ctx.respond(f'"{channel_name}" already exists.')
 
-    @rolebot.command( name="delete",
-                      description="Delete channel from role bot",
-                      guild_ids=settings.DISCORD_GUILD_IDS,
-                      default_permission=False)
+    @rolebot.command(
+        name="delete",
+        description="Delete channel from role bot",
+        guild_ids=settings.DISCORD_GUILD_IDS,
+        default_permission=False,
+    )
     @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
     @option("channel_name", description="#stuff", required=True)
-    @slashcommandlogger
-    async def rolebot_delete(self, ctx: discord.ApplicationContext, channel_name : str):
+    @commandlogger
+    async def rolebot_delete(self, ctx: discord.ApplicationContext, channel_name: str):
         """
         Command for deleting a channel from the rolebot
         :param ctx: slash command context
@@ -302,29 +313,37 @@ class RoleBot(commands.Cog):
         menu = self.open_menu()
 
         for category in menu:
-            channels = list(filter(lambda channel: channel['title'] != channel_name, category["channels"]))
+            channels = list(
+                filter(
+                    lambda channel: channel["title"] != channel_name,
+                    category["channels"],
+                )
+            )
             if len(channels) != len(category["channels"]):
                 modified = True
                 category["channels"] = channels
 
         if modified:
             self.sync_menu(menu)
-            await ctx.respond(f"Deleted \"{channel_name}\".", ephemeral=True)
+            await ctx.respond(f'Deleted "{channel_name}".', ephemeral=True)
         else:
-            await ctx.respond(f"Could not find \"{channel_name}\".", ephemeral=True)
+            await ctx.respond(f'Could not find "{channel_name}".', ephemeral=True)
 
-    @rolebot.command( name="show",
-                      description="Show rolebot static/running config",
-                      guild_ids=settings.DISCORD_GUILD_IDS,
-                      default_permission=False)
-    @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
-    @option(name="config_type",
-            description="Type of config",
-            required=False,
-            choices=[ "running", "static" ],
-            default="static",
+    @rolebot.command(
+        name="show",
+        description="Show rolebot static/running config",
+        guild_ids=settings.DISCORD_GUILD_IDS,
+        default_permission=False,
     )
-    @slashcommandlogger
+    @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
+    @option(
+        name="config_type",
+        description="Type of config",
+        required=False,
+        choices=["active", "filesystem"],
+        default="filesystem",
+    )
+    @commandlogger
     async def rolebot_show(self, ctx: discord.ApplicationContext, config_type: str):
         """
         Show the running/static config in yaml format (More compact than JSON)
@@ -333,9 +352,9 @@ class RoleBot(commands.Cog):
         :return:
         """
         menu = None
-        if config_type == "running":
+        if config_type == "active":
             menu = self.menujson
-        elif config_type == "static":
+        elif config_type == "filesystem":
             menu = self.open_menu()
 
         if menu:
