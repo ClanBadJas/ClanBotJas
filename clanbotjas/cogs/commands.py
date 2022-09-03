@@ -3,29 +3,12 @@ from math import floor
 import time
 
 import discord
-from discord import option, Permissions
+from discord import option
 from discord.ext import commands
 
 
-import cogmanager
 import settings
-
-
-def slashcommandlogger(func):
-    """
-    Decorator that allows slash commands to be logged
-    :param func: original function
-    :return: wrapped function
-    """
-
-    @functools.wraps(func)
-    async def wrapped(self, ctx, *args, **kwargs):
-        # Some fancy foo stuff
-        await func(self, ctx, *args, **kwargs)
-        logChannel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
-        await cogmanager.logCommand(logChannel, ctx, **kwargs)
-
-    return wrapped
+from cogManagerMixin import slashcommandlogger
 
 
 class Commands(commands.Cog):
@@ -76,7 +59,6 @@ class Commands(commands.Cog):
         msg = await ctx.respond(f"ping?")
         latency = floor((time.perf_counter() - start) * 1000)
         await msg.edit_original_message(content=f"Pong! Latency is {latency} ms. API Latency is {floor(ctx.bot.latency * 1000)} ms.")
-
 
     @commands.slash_command(description="get your user ID",
                             guild_ids=settings.DISCORD_GUILD_IDS)

@@ -1,4 +1,3 @@
-import functools
 import io
 
 import discord
@@ -9,7 +8,8 @@ from discord.ext import commands
 from discord import option
 from discord.commands.options import OptionChoice       
 
-import cogmanager
+
+from cogManagerMixin import slashcommandlogger
 import settings
 
 class PercentageMode:
@@ -161,17 +161,6 @@ class PollView(discord.ui.View):
             bar_y = bar_height // 2 + i * bar_height
             self._draw_text(draw, bar_width, bar_y, self.options[i], f"{percentage}%", max == percentage)
         return image
-
-
-def slashcommandlogger(func):
-    @functools.wraps(func)
-    async def wrapped(self, ctx, *args, **kwargs):
-        # Some fancy foo stuff
-        await func(self, ctx, *args, **kwargs)
-        logChannel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
-        await cogmanager.logCommand(logChannel, ctx, **kwargs)
-
-    return wrapped
 
 
 class PollBot(commands.Cog):

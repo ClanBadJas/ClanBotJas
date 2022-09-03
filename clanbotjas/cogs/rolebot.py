@@ -3,15 +3,13 @@ import yaml
 
 import discord
 
-from discord import option, Permissions
+from discord import option
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
-from discord.commands.options import OptionChoice
+
 
 import settings
-from cogs.commands import slashcommandlogger
-
-
+from cogManagerMixin import slashcommandlogger
 class RoleButton(discord.ui.Button):
     log_channel = None
     settings_channel = None
