@@ -1,7 +1,5 @@
 import functools
 import io
-from enum import Enum
-from logging import PlaceHolder
 
 import discord
 import numpy as np
