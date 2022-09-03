@@ -22,7 +22,7 @@ class VoiceChannelBot(commands.Cog):
         self.category = self.client.get_channel(settings.DISCORD_VOICE_CHANNEL_CATEGORY)
         await self.autoscale()
         await self.sync_channel_names(self.category.voice_channels)
-        await self.logChannel.send(":white_check_mark: Cog: \"voicechannelbot\" ready.")
+        await self.logChannel.send(':white_check_mark: Cog: "voicechannelbot" ready.')
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
@@ -70,7 +70,8 @@ class VoiceChannelBot(commands.Cog):
             name = self.get_most_played_game(voice_channel)
             if voice_channel.name != name:
                 await self.logChannel.send(
-                    f":twisted_rightwards_arrows: AutoRename:	Changed {voice_channel.name} to {name}.")
+                    f":twisted_rightwards_arrows: AutoRename:	Changed {voice_channel.name} to {name}."
+                )
                 await voice_channel.edit(name=name)
 
     async def autoscale(self):
@@ -100,13 +101,17 @@ class VoiceChannelBot(commands.Cog):
         if delete_channels:
             delete_amount = len(delete_channels)
             await self.logChannel.send(
-                f":arrows_clockwise: AutoScale:		Deleting empty channels. Now managing {before_channel_count - delete_amount} channel(s).")
+                f":arrows_clockwise: AutoScale:		Deleting empty channels. Now managing {before_channel_count - delete_amount} channel(s)."
+            )
 
         # If no empty channel exists, create a new one
         if empty_channel is None:
-            empty_channel = await template.clone(name=settings.DISCORD_VOICE_CHANNEL_DEFAULT_NAME)
+            empty_channel = await template.clone(
+                name=settings.DISCORD_VOICE_CHANNEL_DEFAULT_NAME
+            )
             await self.logChannel.send(
-                f":arrows_clockwise: AutoScale:		New channel created. Now managing {before_channel_count + 1} channels.")
+                f":arrows_clockwise: AutoScale:		New channel created. Now managing {before_channel_count + 1} channels."
+            )
 
         # Make sure the empty channel is always last
         if self.category.voice_channels[-1] != empty_channel:
