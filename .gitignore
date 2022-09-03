@@ -3,6 +3,5 @@ clanbotjas/data/menu.json
 /.idea/
 /venv/
 .env
-/clanbotjas/data/*.ttf
 clanbotjas/__pycache__/*.pyc
 clanbotjas/cogs/__pycache__/*.pyc
