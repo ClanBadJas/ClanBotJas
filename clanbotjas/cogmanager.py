@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord import option
 
 import settings
-from cogManagerMixin import slashcommandlogger
+from cogManagerMixin import commandlogger
 
 
 class CogManager(commands.Cog):
@@ -28,7 +28,7 @@ class CogManager(commands.Cog):
         required=True,
         choices=settings.DISCORD_COGS,
     )
-    @slashcommandlogger
+    @commandlogger
     async def load(self, ctx: discord.ApplicationContext, cog: str):
         """
         Load a cog
@@ -57,7 +57,7 @@ class CogManager(commands.Cog):
         required=True,
         choices=settings.DISCORD_COGS,
     )
-    @slashcommandlogger
+    @commandlogger
     async def unload(self, ctx: discord.ApplicationContext, cog: str):
         """
         Unload a cog
@@ -87,7 +87,7 @@ class CogManager(commands.Cog):
         required=True,
         choices=settings.DISCORD_COGS,
     )
-    @slashcommandlogger
+    @commandlogger
     async def reload(self, ctx: discord.ApplicationContext, cog: str):
         """
         Reload a cog
@@ -109,7 +109,7 @@ class CogManager(commands.Cog):
         self.client.load_extension(f"cogs.{cog}")
         bot = self.client.get_cog(className)
         await bot.on_ready()
-        await ctx.send(f'Cog: "{cog}" reloaded.')
+        await ctx.respond(f'Cog: "{cog}" reloaded.')
 
 
 class ClanBotjasClient(commands.Bot):

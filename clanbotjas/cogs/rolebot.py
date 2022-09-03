@@ -2,16 +2,15 @@ import json
 import yaml
 
 import discord
-
 from discord import option
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
 
 import settings
-from cogManagerMixin import slashcommandlogger
+from cogManagerMixin import commandlogger, LogButton
 
 
-class RoleButton(discord.ui.Button):
+class RoleButton(LogButton):
     log_channel = None
     settings_channel = None
 
@@ -25,26 +24,17 @@ class RoleButton(discord.ui.Button):
         self.channel_name = channel_name
 
     async def callback(self, interaction: discord.Interaction):
-        self.settings_channel = self.client.get_channel(
-            settings.DISCORD_ROLEBOT_SETTINGS_CHANNEL
-        )
-        self.log_channel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
-
         # Toggle the role on the member
         member = await self.guild.fetch_member(interaction.user.id)
         if self.role in member.roles:
             await member.remove_roles(self.role)
             message = f"{self.channel_name} is now invisible."
-            await self.log_channel.send(
-                f':radio_button: Button clicked | {self.settings_channel.mention} | {member.name} removed role "{self.role.name}".'
-            )
         else:
             await member.add_roles(self.role)
             message = f"{self.channel_name} is now visible."
-            await self.log_channel.send(
-                f':radio_button: Button clicked | {self.settings_channel.mention} | {member.name} added role "{self.role.name}".'
-            )
+
         await interaction.response.send_message(content=message, ephemeral=True)
+        await super().callback(interaction)
 
 
 class RoleBot(commands.Cog):
@@ -275,7 +265,7 @@ class RoleBot(commands.Cog):
     @option("category_name", description="#stuff", required=True)
     @option("channel_name", description="#stuff", required=True)
     @option("role_name", description="#stuff", required=False)
-    @slashcommandlogger
+    @commandlogger
     async def rolebot_add(
         self,
         ctx: discord.ApplicationContext,
@@ -311,7 +301,7 @@ class RoleBot(commands.Cog):
     )
     @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
     @option("channel_name", description="#stuff", required=True)
-    @slashcommandlogger
+    @commandlogger
     async def rolebot_delete(self, ctx: discord.ApplicationContext, channel_name: str):
         """
         Command for deleting a channel from the rolebot
@@ -350,10 +340,10 @@ class RoleBot(commands.Cog):
         name="config_type",
         description="Type of config",
         required=False,
-        choices=["running", "static"],
-        default="static",
+        choices=["active", "filesystem"],
+        default="filesystem",
     )
-    @slashcommandlogger
+    @commandlogger
     async def rolebot_show(self, ctx: discord.ApplicationContext, config_type: str):
         """
         Show the running/static config in yaml format (More compact than JSON)
@@ -362,9 +352,9 @@ class RoleBot(commands.Cog):
         :return:
         """
         menu = None
-        if config_type == "running":
+        if config_type == "active":
             menu = self.menujson
-        elif config_type == "static":
+        elif config_type == "filesystem":
             menu = self.open_menu()
 
         if menu:

@@ -1,14 +1,14 @@
 import io
 
-import discord
 import numpy as np
 from PIL import Image, ImageDraw
 
+import discord
 from discord.ext import commands
 from discord import option
 from discord.commands.options import OptionChoice
 
-from cogManagerMixin import slashcommandlogger
+from cogManagerMixin import commandlogger, LogButton, LogSelect
 import settings
 
 
@@ -17,7 +17,7 @@ class PercentageMode:
     RESPONDENT = 1
 
 
-class PollSelect(discord.ui.Select):
+class PollSelect(LogSelect):
     async def callback(self, interaction: discord.Interaction):
         """
         When a voter selected new options
@@ -27,14 +27,14 @@ class PollSelect(discord.ui.Select):
         self.view.update_user(interaction.user, indices)
 
         await interaction.response.edit_message(embed=self.view.create_embed())
+        await super().callback(interaction)
 
 
-class PollButton(discord.ui.Button):
+class PollButton(LogButton):
     def __init__(self):
         super().__init__(label="Finish poll"),
 
     async def callback(self, interaction: discord.Interaction):
-
         # If the poll is old deactivate it without further action
         # Check if the person who clicked the button is the original author
         if self.view.user.id != interaction.user.id:
@@ -50,6 +50,7 @@ class PollButton(discord.ui.Button):
         await interaction.message.reply(
             content=f"> {self.view.description}", file=self.view.results()
         )
+        await super().callback(interaction)
 
 
 class PollView(discord.ui.View):
@@ -250,7 +251,7 @@ class PollBot(commands.Cog):
     @option(name=f"option7", description="option", required=False)
     @option(name=f"option8", description="option", required=False)
     @option(name=f"option9", description="option", required=False)
-    @slashcommandlogger
+    @commandlogger
     async def _createpoll(
         self,
         ctx: discord.ApplicationContext,
