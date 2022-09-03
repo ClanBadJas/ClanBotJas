@@ -1,7 +1,4 @@
-discord-components==1.1.4
-discord-py-slash-command
-discord-together
-discord.py
+wheel/py_cord-2.1.1-py3-none-any.whl
 python-dotenv
 PyYAML
 Pillow
