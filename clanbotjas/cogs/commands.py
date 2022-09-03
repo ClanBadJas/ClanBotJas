@@ -1,4 +1,3 @@
-import functools
 from math import floor
 import time
 
@@ -6,19 +5,19 @@ import discord
 from discord import option
 from discord.ext import commands
 
-
 import settings
 from cogManagerMixin import slashcommandlogger
 
 
 class Commands(commands.Cog):
-
     def __init__(self, client):
         self.client = client
 
     @commands.Cog.listener()
     async def on_ready(self):
-        await self.client.get_channel(settings.DISCORD_LOG_CHANNEL).send(":white_check_mark: Cog: \"commands\" ready.")
+        await self.client.get_channel(settings.DISCORD_LOG_CHANNEL).send(
+            ':white_check_mark: Cog: "commands" ready.'
+        )
 
     @commands.command()
     @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
@@ -32,22 +31,32 @@ class Commands(commands.Cog):
             return await ctx.respond("Command only works in a guild.")
 
         if ctx.guild.id != settings.DISCORD_GUILD_ID:
-            return await ctx.respond(f"{ctx.author.mention}, Bot is not set up for this guild.", hidden=True)
+            return await ctx.respond(
+                f"{ctx.author.mention}, Bot is not set up for this guild.", hidden=True
+            )
 
         if len(ctx.message.content) <= 4 or len(ctx.message.content[4:].strip()) == 0:
-            return await ctx.respond(f"{ctx.author.mention}, Please provide a valid message!")
+            return await ctx.respond(
+                f"{ctx.author.mention}, Please provide a valid message!"
+            )
 
         # Send arguments as message  and delete the original
         await ctx.send(ctx.message.content[5:])
         await ctx.message.delete()
 
         logChannel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
-        channel = ctx.channel.mention if isinstance(ctx.channel, discord.TextChannel) else "????"
-        await logChannel.send(f":arrow_forward: Command:  {channel} | {ctx.author.mention}: {ctx.message.content}.", )
+        channel = (
+            ctx.channel.mention
+            if isinstance(ctx.channel, discord.TextChannel)
+            else "????"
+        )
+        await logChannel.send(
+            f":arrow_forward: Command:  {channel} | {ctx.author.mention}: {ctx.message.content}.",
+        )
 
-    @commands.slash_command(name="ping",
-                       description="send ping",
-                       guild_ids=settings.DISCORD_GUILD_IDS )
+    @commands.slash_command(
+        name="ping", description="send ping", guild_ids=settings.DISCORD_GUILD_IDS
+    )
     @slashcommandlogger
     async def ping(self, ctx: discord.ApplicationContext):
         """
@@ -58,10 +67,13 @@ class Commands(commands.Cog):
         start = time.perf_counter()
         msg = await ctx.respond(f"ping?")
         latency = floor((time.perf_counter() - start) * 1000)
-        await msg.edit_original_message(content=f"Pong! Latency is {latency} ms. API Latency is {floor(ctx.bot.latency * 1000)} ms.")
+        await msg.edit_original_message(
+            content=f"Pong! Latency is {latency} ms. API Latency is {floor(ctx.bot.latency * 1000)} ms."
+        )
 
-    @commands.slash_command(description="get your user ID",
-                            guild_ids=settings.DISCORD_GUILD_IDS)
+    @commands.slash_command(
+        description="get your user ID", guild_ids=settings.DISCORD_GUILD_IDS
+    )
     @slashcommandlogger
     async def getid(self, ctx: discord.ApplicationContext):
         """
@@ -71,20 +83,25 @@ class Commands(commands.Cog):
         """
         await ctx.respond(content=f"Your id is: {ctx.author.id}", hidden=True)
 
-    @commands.slash_command(name="purge", description="purge messages", guild_ids=settings.DISCORD_GUILD_IDS,
-                            default_permission=False)
+    @commands.slash_command(
+        name="purge",
+        description="purge messages",
+        guild_ids=settings.DISCORD_GUILD_IDS,
+        default_permission=False,
+    )
     @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
-    @option(name="amount", 
-        description="Amount of messages to purge", 
+    @option(
+        name="amount",
+        description="Amount of messages to purge",
         required=True,
         min_value=1,
-        max_value=100
+        max_value=100,
     )
     @slashcommandlogger
     async def purge(self, ctx: discord.ApplicationContext, amount: int):
         await ctx.channel.purge(limit=amount)
         await ctx.respond(content=f"Purged the last {amount} message(s).")
 
- 
+
 def setup(client):
     client.add_cog(Commands(client))

@@ -6,15 +6,16 @@ from PIL import Image, ImageDraw
 
 from discord.ext import commands
 from discord import option
-from discord.commands.options import OptionChoice       
-
+from discord.commands.options import OptionChoice
 
 from cogManagerMixin import slashcommandlogger
 import settings
 
+
 class PercentageMode:
     CUMULATIVE = 0
     RESPONDENT = 1
+
 
 class PollSelect(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
@@ -27,12 +28,13 @@ class PollSelect(discord.ui.Select):
 
         await interaction.response.edit_message(embed=self.view.create_embed())
 
+
 class PollButton(discord.ui.Button):
     def __init__(self):
         super().__init__(label="Finish poll"),
 
     async def callback(self, interaction: discord.Interaction):
-        
+
         # If the poll is old deactivate it without further action
         # Check if the person who clicked the button is the original author
         if self.view.user.id != interaction.user.id:
@@ -40,28 +42,44 @@ class PollButton(discord.ui.Button):
             return
         # Button needs to be deactivated
         for item in self.view.children:
-           item.disabled = True
+            item.disabled = True
         # Original polls
-        await interaction.response.edit_message(embed=self.view.create_embed(), view=self.view)
-        await interaction.message.reply(content=f"> {self.view.description}", file=self.view.results())
+        await interaction.response.edit_message(
+            embed=self.view.create_embed(), view=self.view
+        )
+        await interaction.message.reply(
+            content=f"> {self.view.description}", file=self.view.results()
+        )
+
 
 class PollView(discord.ui.View):
     """
     Object that contains state information about ongoing polls, this information is lost when te server is restarted
     """
+
     def __init__(self, user, description, percentage_mode, max_values, opts):
-        super().__init__(timeout=None) # timeout of the view must be set to None
-       
+        super().__init__(timeout=None)  # timeout of the view must be set to None
+
         self.description = description
         self.user = user
         self.user_options = {}
         self.percentage_mode = percentage_mode
         self.options = np.array(list(opts))
         self.max_values = min(self.options.size, max_values)
-        
-        options = [discord.SelectOption(label=name, value=str(i)) for i, name in enumerate(self.options)]
+
+        options = [
+            discord.SelectOption(label=name, value=str(i))
+            for i, name in enumerate(self.options)
+        ]
         description = f"select up to {self.max_values} option(s)"
-        self.add_item(PollSelect(placeholder=description, min_values=1, max_values=self.max_values, options=options))
+        self.add_item(
+            PollSelect(
+                placeholder=description,
+                min_values=1,
+                max_values=self.max_values,
+                options=options,
+            )
+        )
         self.add_item(PollButton())
 
     def update_user(self, user, values):
@@ -111,7 +129,7 @@ class PollView(discord.ui.View):
         # create the image
         buf = io.BytesIO()
         image = self._create_poll_image(heights)
-        image.save(buf, format='PNG')
+        image.save(buf, format="PNG")
         buf.seek(0)
 
         return discord.File(buf, filename="pollresult.png")
@@ -128,14 +146,30 @@ class PollView(discord.ui.View):
         :param win: If it is an winning answer
         :return:
         """
-        font = settings.DISCORD_TTF_POLL_BOLD if win else settings.DISCORD_TTF_POLL_NORMAL
-        lbound, rbound = 25 * settings.DISCORD_TTF_SCALE_FACTOR, bar_width - 25 * settings.DISCORD_TTF_SCALE_FACTOR
+        font = (
+            settings.DISCORD_TTF_POLL_BOLD if win else settings.DISCORD_TTF_POLL_NORMAL
+        )
+        lbound, rbound = (
+            25 * settings.DISCORD_TTF_SCALE_FACTOR,
+            bar_width - 25 * settings.DISCORD_TTF_SCALE_FACTOR,
+        )
 
-        label_center = bar_y - draw.textbbox((0, 0), text=text, font=font, anchor="lt")[3] // 2
-        percentage_center = bar_y - draw.textbbox((0, 0), text=percentage, font=font, anchor="lt")[3] // 2
+        label_center = (
+            bar_y - draw.textbbox((0, 0), text=text, font=font, anchor="lt")[3] // 2
+        )
+        percentage_center = (
+            bar_y
+            - draw.textbbox((0, 0), text=percentage, font=font, anchor="lt")[3] // 2
+        )
 
         draw.text((lbound, label_center), text, fill="white", anchor="lt", font=font)
-        draw.text((rbound, percentage_center), percentage, fill="white", anchor="rt", font=font)
+        draw.text(
+            (rbound, percentage_center),
+            percentage,
+            fill="white",
+            anchor="rt",
+            font=font,
+        )
 
     def _create_poll_image(self, percentages):
         """
@@ -151,36 +185,61 @@ class PollView(discord.ui.View):
         # Fill the bars
         for i, percentage in enumerate(percentages):
             width = percentage * bar_width // 100
-            bar = settings.DISCORD_POLL_WIN if percentage == max else settings.DISCORD_POLL_FULL
-            bitmap[i * bar_height:(i + 1) * bar_height, :width] = bar[:, :width]
+            bar = (
+                settings.DISCORD_POLL_WIN
+                if percentage == max
+                else settings.DISCORD_POLL_FULL
+            )
+            bitmap[i * bar_height : (i + 1) * bar_height, :width] = bar[:, :width]
 
         # Create the PIL image and draw the text
         image = Image.fromarray(bitmap)
         draw = ImageDraw.Draw(image)
         for i, percentage in enumerate(percentages):
             bar_y = bar_height // 2 + i * bar_height
-            self._draw_text(draw, bar_width, bar_y, self.options[i], f"{percentage}%", max == percentage)
+            self._draw_text(
+                draw,
+                bar_width,
+                bar_y,
+                self.options[i],
+                f"{percentage}%",
+                max == percentage,
+            )
         return image
 
 
 class PollBot(commands.Cog):
-
     def __init__(self, client):
         self.client = client
 
     @commands.Cog.listener()
     async def on_ready(self):
-        await self.client.get_channel(settings.DISCORD_LOG_CHANNEL).send(":white_check_mark: Cog: \"pollbot\" ready.")
+        await self.client.get_channel(settings.DISCORD_LOG_CHANNEL).send(
+            ':white_check_mark: Cog: "pollbot" ready.'
+        )
 
-
-    @commands.slash_command(name="createpoll", description="Create a poll", guild_ids=settings.DISCORD_GUILD_IDS,
-                            default_permission=False)
+    @commands.slash_command(
+        name="createpoll",
+        description="Create a poll",
+        guild_ids=settings.DISCORD_GUILD_IDS,
+        default_permission=False,
+    )
     @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
     @option(name="description", description="Poll description", required=True)
-    @option(name="max_values", description="Maximum options the voter can select",required=False)
-    @option(name="percentage_mode", description="Percentage calculation mode",required=False,
-            choices=[OptionChoice(name="cumulative", value=PercentageMode.CUMULATIVE),
-                     OptionChoice(name="respondent", value=PercentageMode.RESPONDENT)])
+    @option(
+        name="max_values",
+        description="Maximum options the voter can select",
+        required=False,
+    )
+    @option(
+        name="percentage_mode",
+        description="Percentage calculation mode",
+        required=False,
+        choices=[
+            OptionChoice(name="cumulative", value=PercentageMode.CUMULATIVE),
+            OptionChoice(name="respondent", value=PercentageMode.RESPONDENT),
+        ],
+    )
     @option(name=f"option0", description="option", required=False)
     @option(name=f"option1", description="option", required=False)
     @option(name=f"option2", description="option", required=False)
@@ -192,13 +251,23 @@ class PollBot(commands.Cog):
     @option(name=f"option8", description="option", required=False)
     @option(name=f"option9", description="option", required=False)
     @slashcommandlogger
-    async def _createpoll(self, ctx: discord.ApplicationContext, 
-                          description: str,  max_values: int = 1, 
-                          percentage_mode: int=PercentageMode.CUMULATIVE, 
-                          option0: str = None, option1: str = None, option2: str = None, 
-                          option3: str = None, option4: str = None, option5: str = None, 
-                          option6: str = None, option7: str = None, option8: str = None, 
-                          option9: str = None):
+    async def _createpoll(
+        self,
+        ctx: discord.ApplicationContext,
+        description: str,
+        max_values: int = 1,
+        percentage_mode: int = PercentageMode.CUMULATIVE,
+        option0: str = None,
+        option1: str = None,
+        option2: str = None,
+        option3: str = None,
+        option4: str = None,
+        option5: str = None,
+        option6: str = None,
+        option7: str = None,
+        option8: str = None,
+        option9: str = None,
+    ):
         """
         Create a poll with the user selected options
 
@@ -208,13 +277,25 @@ class PollBot(commands.Cog):
         :param percentage_mode: Either cumulative or respondent
         :param opts: all of the poll options
         :return:
-        """   
-        opts = [option0, option1, option2, option3, option4, option5, option6, option7, option8, option9]
+        """
+        opts = [
+            option0,
+            option1,
+            option2,
+            option3,
+            option4,
+            option5,
+            option6,
+            option7,
+            option8,
+            option9,
+        ]
         opts = list(filter(lambda item: item is not None, opts))
         if len(opts) == 0:
             return await ctx.respond(content="Please provide arguments", ephemeral=True)
         poll = PollView(ctx.author, description, percentage_mode, max_values, opts)
         await ctx.respond(embed=poll.create_embed(), view=poll)
+
 
 def setup(client):
     client.add_cog(PollBot(client))
