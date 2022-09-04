@@ -9,18 +9,6 @@
             {
                 "title": "pubg",
                 "role": "pubg"
-            },
-            {
-                "title": "rainbow-siege",
-                "role": "rainbowsiege"
-            },
-            {
-                "title": "fallguys",
-                "role": "fallguys"
-            },
-            {
-                "title": "cod4",
-                "role": "cod4"
             }
         ]
     },
@@ -28,44 +16,16 @@
         "title": "Chatrooms",
         "channels": [
             {
-                "title": "mededelingen",
-                "role": "mededelingen"
+                "title": "announcements",
+                "role": "announcements"
             },
             {
-                "title": "clanbadjas",
-                "role": "clanbadjaschannel"
+                "title": "general",
+                "role": "general"
             },
             {
-                "title": "cbj-lan",
-                "role": "cbj-lan"
-            },
-            {
-                "title": "campzone",
-                "role": "campzone"
-            },
-            {
-                "title": "technische-dienst",
-                "role": "technische-dienst"
-            },
-            {
-                "title": "tinkering",
-                "role": "tinkering"
-            },
-            {
-                "title": "marktplaats",
-                "role": "marktplaats"
-            },
-            {
-                "title": "formule1",
-                "role": "formule1"
-            },
-            {
-                "title": "barbecue",
-                "role": "barbecue"
-            },
-            {
-                "title": "jukebox",
-                "role": "jukebox"
+                "title": "offtopic",
+                "role": "offtopic"
             }
         ]
     }

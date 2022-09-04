@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clanbotjas-env
+data:
+  BOT_TOKEN: <token-here>
+  GUILD_ID: "<guild-id-here>"
+  LOG_CHANNEL: "<log-channel-id-here>"
+  COMMAND_PERMISSION_ROLE: "<role-id-here>"
+  VOICE_SCALER_ENABLE: "true"
+  VOICE_CHANNEL_CATEGORY: "<catergory-id-here>"
+  VOICE_CHANNEL_DEFAULT_NAME: "Voice Channel"
+  ROLEBOT_ENABLE: "true"
+  ROLEBOT_SETTINGS_CHANNEL: "<settings-channel-id-here>"
+  AUTO_ROLE_ENABLE: "true"
+  AUTO_ROLES: Role1,role-2,test3
+  POLL_ENABLE: "true"
+  POLL_FONT_REGULAR: Helvetica.ttf
+  POLL_FONT_BOLD: Helvetica-Bold-Font.ttf
+  POLL_FONT_SCALE: "10"
