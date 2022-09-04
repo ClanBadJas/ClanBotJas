@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.utils import get
-from cogManagerMixin import commandlogger
+from cogmanagermixin import commandlogger
 
 import settings
 

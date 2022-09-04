@@ -6,24 +6,33 @@ from discord import option
 from discord.ext import commands
 
 import settings
-from cogManagerMixin import commandlogger
+from cogmanagermixin import commandlogger
+
 
 class SayCommandModal(discord.ui.Modal):
     def __init__(self) -> None:
         super().__init__(title="Modal via Slash Command")
-        self.add_item(discord.ui.InputText(label="Say command input", style=discord.InputTextStyle.long, max_length=2000))
+        self.add_item(
+            discord.ui.InputText(
+                label="Say command input",
+                style=discord.InputTextStyle.long,
+                max_length=2000,
+            )
+        )
 
     async def callback(self, interaction: discord.Interaction):
         text = self.children[0].value
         for channel in interaction.client.get_all_channels():
-            channelName = "#" + channel.name 
+            channelName = "#" + channel.name
             if channelName in text:
                 text = text.replace(channelName, channel.mention)
         for member in interaction.client.get_all_members():
             memberName = "@" + member.name
             if memberName in text:
                 text = text.replace(memberName, member.mention)
-        for role in await interaction.client.get_guild(settings.DISCORD_GUILD_ID).fetch_roles():
+        for role in await interaction.client.get_guild(
+            settings.DISCORD_GUILD_ID
+        ).fetch_roles():
             if role.name.startswith("@"):
                 roleName = role.name
             else:
@@ -31,9 +40,10 @@ class SayCommandModal(discord.ui.Modal):
 
             if roleName in text:
                 text = text.replace(roleName, role.mention)
-        
+
         await interaction.channel.send(text)
         await interaction.response.send_message("Message was sent.", ephemeral=True)
+
 
 class Commands(commands.Cog):
     def __init__(self, client):

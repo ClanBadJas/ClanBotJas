@@ -8,7 +8,7 @@ from discord.ext import commands
 from discord import option
 from discord.commands.options import OptionChoice
 
-from cogManagerMixin import commandlogger, LogButton, LogSelect
+from cogmanagermixin import commandlogger, LogButton, LogSelect
 import settings
 
 

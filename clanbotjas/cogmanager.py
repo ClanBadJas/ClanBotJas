@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord import option
 
 import settings
-from cogManagerMixin import commandlogger
+from cogmanagermixin import commandlogger
 
 
 class CogManager(commands.Cog):

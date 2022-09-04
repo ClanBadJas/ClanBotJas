@@ -7,7 +7,7 @@ from discord.ext import commands
 from discord.commands import SlashCommandGroup
 
 import settings
-from cogManagerMixin import commandlogger, LogButton
+from cogmanagermixin import commandlogger, LogButton
 
 
 class RoleButton(LogButton):
