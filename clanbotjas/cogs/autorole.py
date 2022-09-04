@@ -63,7 +63,7 @@ class AutoRole(commands.Cog):
     @commands.Cog.listener()
     async def on_member_join(self, member):
         reponse = await self.add_auto_roles(member)
-        await self.logChannel.send(f":ballot_box_with_check: Roles: {reponse}")
+        await self.logChannel.send(f":ballot_box_with_check: {reponse}")
 
     @commands.user_command(
         name="add auto roles",
