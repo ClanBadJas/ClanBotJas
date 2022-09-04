@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: clanbotjas
+  name: clanbotjas
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clanbotjas
+  template:
+    metadata:
+      labels:
+        app: clanbotjas
+    spec:
+      containers:
+      - name: clanbotjas
+        image: clanbadjas/clanbotjas:latest
+        envFrom:
+          - configMapRef:
+              name: clanbotjas-env
+        volumeMounts:
+          - name: clanbotjas-storage
+            mountPath: /clanbotjas/data
+      volumes:
+        - name: clanbotjas-storage
+          persistentVolumeClaim:
+            claimName: clanbotjas-pvc
