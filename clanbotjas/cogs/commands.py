@@ -8,6 +8,32 @@ from discord.ext import commands
 import settings
 from cogManagerMixin import commandlogger
 
+class SayCommandModal(discord.ui.Modal):
+    def __init__(self) -> None:
+        super().__init__(title="Modal via Slash Command")
+        self.add_item(discord.ui.InputText(label="Say command input", style=discord.InputTextStyle.long, max_length=2000))
+
+    async def callback(self, interaction: discord.Interaction):
+        text = self.children[0].value
+        for channel in interaction.client.get_all_channels():
+            channelName = "#" + channel.name 
+            if channelName in text:
+                text = text.replace(channelName, channel.mention)
+        for member in interaction.client.get_all_members():
+            memberName = "@" + member.name
+            if memberName in text:
+                text = text.replace(memberName, member.mention)
+        for role in await interaction.client.get_guild(settings.DISCORD_GUILD_ID).fetch_roles():
+            if role.name.startswith("@"):
+                roleName = role.name
+            else:
+                roleName = "@" + role.name
+
+            if roleName in text:
+                text = text.replace(roleName, role.mention)
+        
+        await interaction.channel.send(text)
+        await interaction.response.send_message("Message was sent.", ephemeral=True)
 
 class Commands(commands.Cog):
     def __init__(self, client):
@@ -19,40 +45,13 @@ class Commands(commands.Cog):
             ':white_check_mark: Cog: "commands" ready.'
         )
 
-    @commands.command()
+    @commands.slash_command(
+        description="Make the bot say something.", guild_ids=settings.DISCORD_GUILD_IDS
+    )
     @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
-    async def say(self, ctx):
-        """
-        The say command will echo the user's arguments and delete the original message
-        :param ctx:
-        :return:
-        """
-        if not ctx.guild:
-            return await ctx.respond("Command only works in a guild.")
-
-        if ctx.guild.id != settings.DISCORD_GUILD_ID:
-            return await ctx.respond(
-                f"{ctx.author.mention}, Bot is not set up for this guild.", hidden=True
-            )
-
-        if len(ctx.message.content) <= 4 or len(ctx.message.content[4:].strip()) == 0:
-            return await ctx.respond(
-                f"{ctx.author.mention}, Please provide a valid message!"
-            )
-
-        # Send arguments as message  and delete the original
-        await ctx.send(ctx.message.content[5:])
-        await ctx.message.delete()
-
-        logChannel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
-        channel = (
-            ctx.channel.mention
-            if isinstance(ctx.channel, discord.TextChannel)
-            else "????"
-        )
-        await logChannel.send(
-            f":arrow_forward: Command:  {channel} | {ctx.author.mention}: {ctx.message.content}.",
-        )
+    @commandlogger
+    async def say(self, ctx: discord.ApplicationContext):
+        await ctx.send_modal(SayCommandModal())
 
     @commands.slash_command(
         name="ping", description="send ping", guild_ids=settings.DISCORD_GUILD_IDS
@@ -119,6 +118,7 @@ class Commands(commands.Cog):
             reason=reason,
         )
         await ctx.respond(content=reason)
+
 
 
 def setup(client):
