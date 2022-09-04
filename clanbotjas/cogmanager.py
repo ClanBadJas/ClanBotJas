@@ -112,7 +112,7 @@ class CogManager(commands.Cog):
         await ctx.respond(f'Cog: "{cog}" reloaded.')
 
 
-class ClanBotjasClient(commands.Bot):
+class ClanBotjasClient(discord.Bot):
     def __init__(self):
         super().__init__(
             command_prefix=commands.when_mentioned_or("!"), intents=settings.INTENTS

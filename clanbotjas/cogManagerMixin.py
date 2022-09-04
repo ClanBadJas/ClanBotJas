@@ -47,7 +47,8 @@ def commandlogger(func):
         log_string += f" | {ctx.author}: /{ctx.command} "
 
         for k, v in kwargs.items():
-            log_string += f" {k}: {v}"
+            if v is not None:
+                log_string += f" {k}: {v}"
         return log_string
 
     def messageCommand(ctx):
