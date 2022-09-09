@@ -6,7 +6,7 @@ This Discord Bot, based on py-cord version 2.1.1, is a simple, self-hosted, cust
 ## Automatic Builds
 This project uses GitHub Actions to build and push new images to Docker Hub [clanbadjas/clanbotjas-dev](https://hub.docker.com/r/clanbadjas/clanbotjas-dev)
 
-[![Docker Image CI](https://github.com/ClanBadJas/ClanBotJas/actions/workflows/docker-image.yml/badge.svg?branch=dev)](https://github.com/ClanBadJas/ClanBotJas/actions/workflows/docker-image.yml)
+[![Docker Image CI Dev](https://github.com/ClanBadJas/ClanBotJas/actions/workflows/docker-image-dev.yml/badge.svg)](https://github.com/ClanBadJas/ClanBotJas/actions/workflows/docker-image-dev.yml)
 
 ## Installation and configuration
 ClanBotJas can be run as standalone Python application, as a pre-built container or as a container built from source.
