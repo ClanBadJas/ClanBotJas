@@ -1,5 +1,7 @@
+import discord
 from discord.ext import commands
 from discord.utils import get
+from cogmanagermixin import commandlogger
 
 import settings
 
@@ -51,15 +53,31 @@ class AutoRole(commands.Cog):
     :return:
     """
 
-    @commands.Cog.listener()
-    async def on_member_join(self, member):
+    async def add_auto_roles(self, member):
         for i in self.autoRoles:
             role = get(self.guild.roles, name=i)
             await member.add_roles(role)
         roles = settings.DISCORD_AUTO_ROLES
-        await self.logChannel.send(
-            f':ballot_box_with_check: Roles: "{roles}" added for new user {member.name}.'
-        )
+        return f'Roles: "{roles}" added for new user {member.name}.'
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        reponse = await self.add_auto_roles(member)
+        await self.logChannel.send(f":ballot_box_with_check: {reponse}")
+
+    @commands.user_command(
+        name="add auto roles",
+        description="add auto roles",
+        guild_ids=settings.DISCORD_GUILD_IDS,
+        default_permission=False,
+    )
+    @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
+    @commandlogger
+    async def add_auto_role_command(
+        self, ctx: discord.ApplicationContext, member: discord.Member
+    ):
+        reponse = await self.add_auto_roles(member)
+        await ctx.respond(content=reponse, ephemeral=True)
 
 
 def setup(client):

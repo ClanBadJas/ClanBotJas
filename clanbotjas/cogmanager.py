@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord import option
 
 import settings
-from cogManagerMixin import commandlogger
+from cogmanagermixin import commandlogger
 
 
 class CogManager(commands.Cog):
@@ -112,7 +112,7 @@ class CogManager(commands.Cog):
         await ctx.respond(f'Cog: "{cog}" reloaded.')
 
 
-class ClanBotjasClient(commands.Bot):
+class ClanBotjasClient(discord.Bot):
     def __init__(self):
         super().__init__(
             command_prefix=commands.when_mentioned_or("!"), intents=settings.INTENTS

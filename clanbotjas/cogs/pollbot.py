@@ -8,7 +8,7 @@ from discord.ext import commands
 from discord import option
 from discord.commands.options import OptionChoice
 
-from cogManagerMixin import commandlogger, LogButton, LogSelect
+from cogmanagermixin import commandlogger, LogButton, LogSelect
 import settings
 
 
@@ -38,7 +38,9 @@ class PollButton(LogButton):
         # If the poll is old deactivate it without further action
         # Check if the person who clicked the button is the original author
         if self.view.user.id != interaction.user.id:
-            await interaction.respond(content="You did not create the poll.")
+            await interaction.response.send_message(
+                content="You did not create the poll.", ephemeral=True
+            )
             return
         # Button needs to be deactivated
         for item in self.view.children:
