@@ -18,7 +18,7 @@ def _int(name: str):
 DISCORD_TOKEN = os.getenv("BOT_TOKEN")
 DISCORD_GUILD_ID = _int(os.getenv("GUILD_ID"))
 DISCORD_LOG_CHANNEL = _int(os.getenv("LOG_CHANNEL"))
-DISCORD_DB_LINK = os.getenv("DB_LINK")
+DISCORD_DB_LINK = os.getenv("DB_LINK_ASYNCIO")
 
 # Get user permission settings
 DISCORD_COMMAND_PERMISSION_ROLE = _int(os.getenv("COMMAND_PERMISSION_ROLE"))

@@ -163,19 +163,7 @@ class ClanBotjasClient(discord.Bot):
         await self.on_command_error(ctx, error)
 
 
-def _build_async_db_uri(uri):
-    if "+aiosqlite" not in uri:
-        return '+aiosqlite:'.join(uri.split(":", 1))
-    return uri
-
-
 if __name__ == "__main__":
-    engine = create_async_engine(
-        _build_async_db_uri(settings.DISCORD_DB_LINK),
-        echo=True,
-    )
-    async_session = sessionmaker(
-        engine, expire_on_commit=False, class_=AsyncSession
-    )
-
+    engine = create_async_engine(settings.DISCORD_DB_LINK, echo=True)
+    async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
     ClanBotjasClient(async_session).run(settings.DISCORD_TOKEN)

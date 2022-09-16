@@ -6,3 +6,7 @@ numpy
 sqlalchemy
 alembic
 aiosqlite
+asyncmy
+pymysql
+psycopg2-binary
+asyncpg

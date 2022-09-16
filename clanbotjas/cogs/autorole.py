@@ -62,7 +62,6 @@ class AutoRole(commands.Cog):
     @commands.user_command(
         name="add auto roles",
         description="add auto roles",
-        default_permission=True,
     )
     @commands.has_permissions(manage_roles=True)
     @commandlogger
@@ -76,7 +75,6 @@ class AutoRole(commands.Cog):
 
     @autorole.command(
         description="add autorole",
-        default_permission=True,
     )
     @commands.has_permissions(manage_roles=True)
     @commandlogger
@@ -105,7 +103,6 @@ class AutoRole(commands.Cog):
 
     @autorole.command(
         description="remove autorole",
-        default_permission=True,
     )
     @commands.has_permissions(manage_roles=True)
     @commandlogger
@@ -123,7 +120,6 @@ class AutoRole(commands.Cog):
 
     @autorole.command(
         description="Synchronizes the autoroles and shows them in a list.",
-        default_permission=True,
     )
     @commands.has_permissions(manage_roles=True)
     @commandlogger

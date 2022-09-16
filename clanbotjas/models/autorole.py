@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, DateTime
+from sqlalchemy import Column, DateTime, BigInteger
 
 from .base import Base
 
@@ -8,9 +8,9 @@ from .base import Base
 class AutoRole(Base):
     __tablename__ = 'autorole'
 
-    id = Column(Integer, primary_key=True)
-    guild_id = Column(Integer)
-    role_id = Column(Integer, unique=True)
+    id = Column(BigInteger, primary_key=True)
+    guild_id = Column(BigInteger, nullable=False)
+    role_id = Column(BigInteger, nullable=False, unique=True)
     created = Column(DateTime, default=datetime.now)
 
     def __repr__(self) -> str:
