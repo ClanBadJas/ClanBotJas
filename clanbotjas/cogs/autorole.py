@@ -1,50 +1,31 @@
 import discord
+from discord import Option, Role, SlashCommandGroup
 from discord.ext import commands
-from discord.utils import get
+from sqlalchemy import delete
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.future import select
+import models
+
 from cogmanagermixin import commandlogger
 
 import settings
 
 
 class AutoRole(commands.Cog):
-    guild = None
-    roleMap = {}
-    autoRoles = []
+    autoRoleMap = {}
     logChannel = None
 
     def __init__(self, client):
         self.client = client
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        """
-        Initialize the bot onready
-        :return:
-        """
-        self.guild = await self.client.fetch_guild(settings.DISCORD_GUILD_ID)
-        self.logChannel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
-        self.autoRoles = settings.DISCORD_AUTO_ROLES.split(",")
-
-        """
-        Create a dictionary that maps the names of roles.
-        :return:
-        """
-        roles = await self.guild.fetch_roles()
-        for role in roles:
-            self.roleMap[role.name] = role
-
-        """
-        Verify that configured roles exist.
-        :return:
-        """
-        for i in self.autoRoles:
-            if i not in self.roleMap:
-                await self.logChannel.send(
-                    "Discord AutoRole cog failed: One or more configured roles are missing on the server."
-                )
-                return
-
-        await self.logChannel.send(':white_check_mark: Cog: "autorole" ready.')
+    async def getAutoRoles(self, guild):
+        roles = set()
+        async with self.client.db_session() as session:
+            stmt = select(models.AutoRole).where(models.AutoRole.guild_id == guild.id)
+            result = await session.execute(stmt)
+            for autorole in result.scalars():
+                roles.add(guild.get_role(autorole.role_id))
+        return roles
 
     """
     When new member joins the server, cycle through the configured roles.
@@ -52,13 +33,26 @@ class AutoRole(commands.Cog):
     Add the role to the newly joined member.
     :return:
     """
+    async def add_auto_roles(self, member: discord.Member):
+        roles = self.autoRoleMap[member.guild]
+        roleText = ", ".join([role.mention for role in roles])
+        try:
+            await member.add_roles(*tuple(roles))
+            return f'Roles: {roleText} added for user {member.name}.'
+        except discord.errors.Forbidden:
+            return f'autorole cannot add the following roles:{roleText}.'
 
-    async def add_auto_roles(self, member):
-        for i in self.autoRoles:
-            role = get(self.guild.roles, name=i)
-            await member.add_roles(role)
-        roles = settings.DISCORD_AUTO_ROLES
-        return f'Roles: "{roles}" added for new user {member.name}.'
+    @commands.Cog.listener()
+    async def on_ready(self):
+        """
+        Initialize the bot onready
+        :return:
+        """
+        for guild in self.client.guilds:
+            self.autoRoleMap[guild] = await self.getAutoRoles(guild)
+        await self.client.get_channel(settings.DISCORD_LOG_CHANNEL).send(
+            ':white_check_mark: Cog: "autorole" ready.'
+        )
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -68,16 +62,76 @@ class AutoRole(commands.Cog):
     @commands.user_command(
         name="add auto roles",
         description="add auto roles",
-        guild_ids=settings.DISCORD_GUILD_IDS,
-        default_permission=False,
+        default_permission=True,
     )
-    @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
+    @commands.has_permissions(manage_roles=True)
     @commandlogger
     async def add_auto_role_command(
-        self, ctx: discord.ApplicationContext, member: discord.Member
+            self, ctx: discord.ApplicationContext, member: discord.Member
     ):
         reponse = await self.add_auto_roles(member)
         await ctx.respond(content=reponse, ephemeral=True)
+
+    autorole = SlashCommandGroup("autorole", "autorole related commands")
+
+    @autorole.command(
+        description="add autorole",
+        default_permission=True,
+    )
+    @commands.has_permissions(manage_roles=True)
+    @commandlogger
+    async def add(self, ctx: discord.ApplicationContext, role: Option(Role)):
+        bot_member = ctx.guild.get_member(self.client.user.id)
+        if role.is_bot_managed():
+            await ctx.respond(content=f'Autorole cannot add the bot role {role.mention} to users.')
+            return
+        if role >= bot_member.top_role:
+            await ctx.respond(content=f'Autorole cannot assign the {role.mention} role to users.')
+            return
+
+        auto_role = models.AutoRole(role_id=role.id, guild_id=ctx.guild.id)
+        async with self.client.db_session() as session:
+            try:
+                session.add(auto_role)
+                await session.commit()
+                added_role = True
+            except IntegrityError:
+                added_role = False
+        if added_role:
+            self.autoRoleMap[ctx.guild].add(role)
+            await ctx.respond(content=f"Added the {role.mention} role to autorole.")
+        else:
+            await ctx.respond(content=f"Couldn't add the {role.mention} role to autorole.")
+
+    @autorole.command(
+        description="remove autorole",
+        default_permission=True,
+    )
+    @commands.has_permissions(manage_roles=True)
+    @commandlogger
+    async def remove(self, ctx: discord.ApplicationContext, role: Option(Role)):
+        async with self.client.db_session() as session:
+            stmt = delete(models.AutoRole).where(models.AutoRole.role_id == role.id)
+            result = await session.execute(stmt)
+            await session.commit()
+            deleted_role = result.rowcount > 0
+        if deleted_role:
+            self.autoRoleMap[ctx.guild].remove(role)
+            await ctx.respond(content=f"Deleted {role.mention} from autorole.")
+        else:
+            await ctx.respond(content=f"{role.mention} not in autorole")
+
+    @autorole.command(
+        description="Synchronizes the autoroles and shows them in a list.",
+        default_permission=True,
+    )
+    @commands.has_permissions(manage_roles=True)
+    @commandlogger
+    async def show(self, ctx: discord.ApplicationContext):
+        roles = await self.getAutoRoles(ctx.guild)
+        self.autoRoleMap[ctx.guild] = roles
+        rolesText = ", ".join([role.mention for role in roles])
+        await ctx.respond(content=f"current autoroles: {rolesText}")
 
 
 def setup(client):

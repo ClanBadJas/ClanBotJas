@@ -1,9 +1,13 @@
 import discord
 from discord.ext import commands
 from discord import option
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import sessionmaker
 
 import settings
 from cogmanagermixin import commandlogger
+from models import AutoRole
 
 
 class CogManager(commands.Cog):
@@ -15,6 +19,7 @@ class CogManager(commands.Cog):
         await self.client.get_channel(settings.DISCORD_LOG_CHANNEL).send(
             ':white_check_mark: Cog: "cogmanager" ready'
         )
+
 
     @commands.slash_command(
         description="load a cog",
@@ -113,13 +118,14 @@ class CogManager(commands.Cog):
 
 
 class ClanBotjasClient(discord.Bot):
-    def __init__(self):
+    def __init__(self, db_session):
         super().__init__(
             command_prefix=commands.when_mentioned_or("!"), intents=settings.INTENTS
         )
         self.add_cog(CogManager(self))
         for cog in settings.DISCORD_COGS:
             self.load_extension(f"cogs.{cog.name}")
+        self.db_session = db_session
 
     async def on_command_error(
         self, ctx: commands.Context, error: commands.CommandError
@@ -136,6 +142,12 @@ class ClanBotjasClient(discord.Bot):
                 f"{ctx.author.mention}, You do not have permissions to use that command.",
                 ephemeral=True,
             )
+        if isinstance(error, commands.errors.MissingPermissions):
+            await ctx.response.send_message(
+                f"{ctx.author.mention}, {error.args[0]}",
+                ephemeral=True,
+            )
+
         else:
             raise error
 
@@ -151,5 +163,19 @@ class ClanBotjasClient(discord.Bot):
         await self.on_command_error(ctx, error)
 
 
+def _build_async_db_uri(uri):
+    if "+aiosqlite" not in uri:
+        return '+aiosqlite:'.join(uri.split(":", 1))
+    return uri
+
+
 if __name__ == "__main__":
-    ClanBotjasClient().run(settings.DISCORD_TOKEN)
+    engine = create_async_engine(
+        _build_async_db_uri(settings.DISCORD_DB_LINK),
+        echo=True,
+    )
+    async_session = sessionmaker(
+        engine, expire_on_commit=False, class_=AsyncSession
+    )
+
+    ClanBotjasClient(async_session).run(settings.DISCORD_TOKEN)
