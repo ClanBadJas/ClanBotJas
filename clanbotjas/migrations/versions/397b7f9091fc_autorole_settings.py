@@ -1,8 +1,8 @@
-"""add autorole model
+"""autorole settings
 
-Revision ID: a4f5541405ab
+Revision ID: 397b7f9091fc
 Revises: 
-Create Date: 2022-09-14 19:00:49.159534
+Create Date: 2022-09-17 10:31:51.157433
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'a4f5541405ab'
+revision = '397b7f9091fc'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -22,7 +22,7 @@ def upgrade() -> None:
     sa.Column('id', sa.BigInteger(), nullable=False),
     sa.Column('guild_id', sa.BigInteger(), nullable=False),
     sa.Column('role_id', sa.BigInteger(), nullable=False),
-    sa.Column('created', sa.DateTime(), nullable=True),
+    sa.Column('created', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('role_id')
     )
