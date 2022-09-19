@@ -8,7 +8,8 @@ from discord.ext import commands
 from discord import option
 from discord.commands.options import OptionChoice
 
-from cogmanagermixin import commandlogger, LogButton, LogSelect
+import cogmanagerlib
+from cogmanagerlib import commandlogger, LogButton, LogSelect
 import settings
 
 
@@ -106,7 +107,7 @@ class PollView(discord.ui.View):
         votes = "\n".join([str(i) for i in height])
 
         embed = discord.Embed(title=self.description)
-        embed.set_author(name=self.user.name, icon_url=self.user.avatar.url)
+        embed.set_author(name=self.user.name, icon_url=self.user.display_avatar)
         embed.add_field(name="Option", value=options, inline=True)
         embed.add_field(name="Votes", value=votes, inline=True)
         return embed
@@ -217,17 +218,14 @@ class PollBot(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        await self.client.get_channel(settings.DISCORD_LOG_CHANNEL).send(
-            ':white_check_mark: Cog: "pollbot" ready.'
-        )
+        await self.client.broadcast_log_message(':white_check_mark: Cog: "pollbot" ready.')
 
     @commands.slash_command(
         name="createpoll",
         description="Create a poll",
-        guild_ids=settings.DISCORD_GUILD_IDS,
         default_permission=False,
     )
-    @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
+    @cogmanagerlib.has_privileged_role()
     @option(name="description", description="Poll description", required=True)
     @option(
         name="max_values",
@@ -278,7 +276,7 @@ class PollBot(commands.Cog):
         :param description: title of the poll
         :param max_values: Amount of options a voter can select
         :param percentage_mode: Either cumulative or respondent
-        :param opts: all of the poll options
+        :param opts: all the poll options
         :return:
         """
         opts = [
@@ -293,7 +291,7 @@ class PollBot(commands.Cog):
             option8,
             option9,
         ]
-        opts = list(filter(lambda item: item is not None, opts))
+        opts = [opt for opt in opts if opt is not None]
         if len(opts) == 0:
             return await ctx.respond(content="Please provide arguments", ephemeral=True)
         poll = PollView(ctx.author, description, percentage_mode, max_values, opts)

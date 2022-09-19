@@ -6,7 +6,6 @@ import settings
 
 class VoiceChannelBot(commands.Cog):
     category = None
-    logChannel = None
     initialized = False
 
     def __init__(self, client):
@@ -18,11 +17,12 @@ class VoiceChannelBot(commands.Cog):
         Initialize the bot onready
         :return:
         """
-        self.logChannel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
         self.category = self.client.get_channel(settings.DISCORD_VOICE_CHANNEL_CATEGORY)
         await self.autoscale()
         await self.sync_channel_names(self.category.voice_channels)
-        await self.logChannel.send(':white_check_mark: Cog: "voicechannelbot" ready.')
+        await self.client.broadcast_log_message(
+            ':white_check_mark: Cog: "voicechannelbot" ready.'
+        )
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
@@ -69,7 +69,7 @@ class VoiceChannelBot(commands.Cog):
                 continue
             name = self.get_most_played_game(voice_channel)
             if voice_channel.name != name:
-                await self.logChannel.send(
+                await self.client.broadcast_log_message(
                     f":twisted_rightwards_arrows: AutoRename:	Changed {voice_channel.name} to {name}."
                 )
                 await voice_channel.edit(name=name)
@@ -100,7 +100,7 @@ class VoiceChannelBot(commands.Cog):
             await voice_channel.delete()
         if delete_channels:
             delete_amount = len(delete_channels)
-            await self.logChannel.send(
+            await self.client.broadcast_log_message(
                 f":arrows_clockwise: AutoScale:		Deleting empty channels. Now managing {before_channel_count - delete_amount} channel(s)."
             )
 
@@ -109,7 +109,7 @@ class VoiceChannelBot(commands.Cog):
             empty_channel = await template.clone(
                 name=settings.DISCORD_VOICE_CHANNEL_DEFAULT_NAME
             )
-            await self.logChannel.send(
+            await self.client.broadcast_log_message(
                 f":arrows_clockwise: AutoScale:		New channel created. Now managing {before_channel_count + 1} channels."
             )
 

@@ -6,12 +6,13 @@ from discord import option
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
 
+import cogmanagerlib
 import settings
-from cogmanagermixin import commandlogger, LogButton
+from cogmanager import ClanBotjasClient
+from cogmanagerlib import commandlogger, LogButton
 
 
 class RoleButton(LogButton):
-    log_channel = None
     settings_channel = None
 
     def __init__(
@@ -43,10 +44,9 @@ class RoleBot(commands.Cog):
     role_map = {}
     category_map = {}
     text_channel_map = {}
-    log_channel = None
     menujson = None
 
-    def __init__(self, client):
+    def __init__(self, client: ClanBotjasClient):
         self.client = client
 
     rolebot = SlashCommandGroup("rolebot", "Rolebot related commands")
@@ -57,7 +57,6 @@ class RoleBot(commands.Cog):
         Create all settings messages with the buttons attached.
         :return:
         """
-        self.log_channel = self.client.get_channel(settings.DISCORD_LOG_CHANNEL)
         self.guild = await self.client.fetch_guild(settings.DISCORD_GUILD_ID)
         channel_cache = await self.guild.fetch_channels()
 
@@ -68,7 +67,7 @@ class RoleBot(commands.Cog):
 
         self.menujson = self.open_menu()
         if not self.menujson:
-            await self.log_channel.send(
+            await self.client.broadcast_log_message(
                 "Discord button cog failed: Couldn't read menu.json."
             )
             return
@@ -76,7 +75,7 @@ class RoleBot(commands.Cog):
         for menu in self.menujson:
             await self.create_rolebot_messages(menu)
 
-        await self.log_channel.send(':white_check_mark: Cog: "rolebot" ready.')
+        await self.client.broadcast_log_message(':white_check_mark: Cog: "rolebot" ready.')
 
     @staticmethod
     def open_menu():
@@ -258,10 +257,9 @@ class RoleBot(commands.Cog):
     @rolebot.command(
         name="add",
         description="Add channel to role bot",
-        guild_ids=settings.DISCORD_GUILD_IDS,
         default_permission=False,
     )
-    @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
+    @cogmanagerlib.has_privileged_role()
     @option("category_name", description="#stuff", required=True)
     @option("channel_name", description="#stuff", required=True)
     @option("role_name", description="#stuff", required=False)
@@ -296,10 +294,9 @@ class RoleBot(commands.Cog):
     @rolebot.command(
         name="delete",
         description="Delete channel from role bot",
-        guild_ids=settings.DISCORD_GUILD_IDS,
         default_permission=False,
     )
-    @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
+    @cogmanagerlib.has_privileged_role()
     @option("channel_name", description="#stuff", required=True)
     @commandlogger
     async def rolebot_delete(self, ctx: discord.ApplicationContext, channel_name: str):
@@ -332,10 +329,9 @@ class RoleBot(commands.Cog):
     @rolebot.command(
         name="show",
         description="Show rolebot static/running config",
-        guild_ids=settings.DISCORD_GUILD_IDS,
         default_permission=False,
     )
-    @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
+    @cogmanagerlib.has_privileged_role()
     @option(
         name="config_type",
         description="Type of config",

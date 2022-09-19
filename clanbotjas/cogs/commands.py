@@ -6,8 +6,8 @@ import discord
 from discord import option
 from discord.ext import commands
 
-import settings
-from cogmanagermixin import commandlogger
+from cogmanager import ClanBotjasClient
+from cogmanagerlib import commandlogger, has_privileged_role
 
 
 class SayCommandModal(discord.ui.Modal):
@@ -29,8 +29,7 @@ class SayCommandModal(discord.ui.Modal):
             textToObjects[f"@{member.name}"] = member.mention
         for emoji in interaction.client.emojis:
             textToObjects[f":{emoji.name}:"] = f"<:{emoji.name}:{emoji.id}>"
-        roles = await interaction.client.get_guild(
-            settings.DISCORD_GUILD_ID).fetch_roles()
+        roles = await interaction.guild.fetch_roles()
         for role in roles:
             if role.name.startswith("@"):
                 roleName = role.name
@@ -43,7 +42,6 @@ class SayCommandModal(discord.ui.Modal):
 
         def stringToMention(match):
             return textToObjects[match[0]]
-         
 
         text = re.sub(regex, stringToMention, self.children[0].value)
         await interaction.channel.send(text)
@@ -51,25 +49,23 @@ class SayCommandModal(discord.ui.Modal):
 
 
 class Commands(commands.Cog):
-    def __init__(self, client):
+    def __init__(self, client: ClanBotjasClient):
         self.client = client
 
     @commands.Cog.listener()
     async def on_ready(self):
-        await self.client.get_channel(settings.DISCORD_LOG_CHANNEL).send(
-            ':white_check_mark: Cog: "commands" ready.'
-        )
+        await self.client.broadcast_log_message(':white_check_mark: Cog: "commands" ready.')
 
     @commands.slash_command(
-        description="Make the bot say something.", guild_ids=settings.DISCORD_GUILD_IDS
+        description="Make the bot say something."
     )
-    @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
+    @has_privileged_role()
     @commandlogger
     async def say(self, ctx: discord.ApplicationContext):
         await ctx.send_modal(SayCommandModal())
 
     @commands.slash_command(
-        name="ping", description="send ping", guild_ids=settings.DISCORD_GUILD_IDS
+        name="ping", description="send ping"
     )
     @commandlogger
     async def ping(self, ctx: discord.ApplicationContext):
@@ -86,24 +82,11 @@ class Commands(commands.Cog):
         )
 
     @commands.slash_command(
-        description="get your user ID", guild_ids=settings.DISCORD_GUILD_IDS
-    )
-    @commandlogger
-    async def getid(self, ctx: discord.ApplicationContext):
-        """
-        Prints the User ID of the requester
-        :param ctx: Object of the original command
-        :return:
-        """
-        await ctx.respond(content=f"Your id is: {ctx.author.id}", ephemeral=True)
-
-    @commands.slash_command(
         name="purge",
         description="purge messages",
-        guild_ids=settings.DISCORD_GUILD_IDS,
         default_permission=False,
     )
-    @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
+    @has_privileged_role()
     @option(
         name="amount",
         description="Amount of messages to purge",
@@ -119,10 +102,9 @@ class Commands(commands.Cog):
     @commands.message_command(
         name="purge after",
         description="purge messages",
-        guild_ids=settings.DISCORD_GUILD_IDS,
         default_permission=False,
     )
-    @commands.has_role(settings.DISCORD_COMMAND_PERMISSION_ROLE)
+    @has_privileged_role()
     @commandlogger
     async def purge_after(
         self, ctx: discord.ApplicationContext, message: discord.Message

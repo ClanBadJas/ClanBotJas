@@ -14,14 +14,10 @@ def _int(name: str):
     except ValueError:
         return None
 
+
 # Get General Bot settings
 DISCORD_TOKEN = os.getenv("BOT_TOKEN")
-DISCORD_GUILD_ID = _int(os.getenv("GUILD_ID"))
-DISCORD_LOG_CHANNEL = _int(os.getenv("LOG_CHANNEL"))
 DISCORD_DB_LINK = os.getenv("DB_LINK_ASYNCIO")
-
-# Get user permission settings
-DISCORD_COMMAND_PERMISSION_ROLE = _int(os.getenv("COMMAND_PERMISSION_ROLE"))
 
 # Enable/disable feature toggles:
 DISCORD_COMMANDS_ENABLE = os.getenv("COMMANDS_ENABLE") in ["true", None]
@@ -40,13 +36,14 @@ if DISCORD_COMMANDS_ENABLE:
 if DISCORD_VOICE_SCALER_ENABLE:
     DISCORD_COGS.append(OptionChoice(name="voicechannelbot", value="VoiceChannelBot"))
     # Get Voice Auto Scaler settings
-    DISCORD_VOICE_CHANNEL_CATEGORY = _int(os.getenv("VOICE_CHANNEL_CATEGORY"))
-    DISCORD_VOICE_CHANNEL_DEFAULT_NAME = os.getenv("VOICE_CHANNEL_DEFAULT_NAME")
+    DISCORD_VOICE_CHANNEL_CATEGORY = _int(os.getenv("VOICE_CHANNEL_CATEGORY"))  # TODO: Remove
+    DISCORD_VOICE_CHANNEL_DEFAULT_NAME = os.getenv("VOICE_CHANNEL_DEFAULT_NAME")  # TODO: Remove
 
 if DISCORD_ROLEBOT_ENABLE:
     DISCORD_COGS.append(OptionChoice(name="rolebot", value="RoleBot"))
     # Get Self-Role text channel subscription settings
-    DISCORD_ROLEBOT_SETTINGS_CHANNEL = _int(os.getenv("ROLEBOT_SETTINGS_CHANNEL"))
+    DISCORD_ROLEBOT_SETTINGS_CHANNEL = _int(os.getenv("ROLEBOT_SETTINGS_CHANNEL"))  # TODO: Remove
+    DISCORD_GUILD_ID = _int(os.getenv("GUILD_ID")) # TODO: Remove
 
 if DISCORD_AUTO_ROLE_ENABLE:
     DISCORD_COGS.append(OptionChoice(name="autorole", value="AutoRole"))
@@ -67,9 +64,6 @@ if DISCORD_POLL_ENABLE:
     DISCORD_POLL_EMPTY, DISCORD_POLL_FULL, DISCORD_POLL_WIN = np.split(
         np.array(Image.open("data/basepollimages.png")), 3
     )
-
-# Set up a list of Guilds to connect, only one in this case
-DISCORD_GUILD_IDS = [DISCORD_GUILD_ID]
 
 # Define which intents the bot requires to function
 INTENTS = discord.Intents(
