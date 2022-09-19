@@ -35,9 +35,6 @@ if DISCORD_COMMANDS_ENABLE:
 
 if DISCORD_VOICE_SCALER_ENABLE:
     DISCORD_COGS.append(OptionChoice(name="voicechannelbot", value="VoiceChannelBot"))
-    # Get Voice Auto Scaler settings
-    DISCORD_VOICE_CHANNEL_CATEGORY = _int(os.getenv("VOICE_CHANNEL_CATEGORY"))  # TODO: Remove
-    DISCORD_VOICE_CHANNEL_DEFAULT_NAME = os.getenv("VOICE_CHANNEL_DEFAULT_NAME")  # TODO: Remove
 
 if DISCORD_ROLEBOT_ENABLE:
     DISCORD_COGS.append(OptionChoice(name="rolebot", value="RoleBot"))
