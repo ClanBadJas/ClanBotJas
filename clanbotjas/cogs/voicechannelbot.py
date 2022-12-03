@@ -45,7 +45,7 @@ class VoiceChannelBot(commands.Cog):
         # Make sure this is not an event within the same channel
 
     @commands.Cog.listener()
-    async def on_member_update(self, before, after):
+    async def on_presence_update(self, before, after):
         """
         check if the user is playing a different game.
         :param args:
