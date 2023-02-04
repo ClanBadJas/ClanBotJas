@@ -1,4 +1,5 @@
 from math import floor
+import re
 import time
 
 import discord
@@ -21,26 +22,30 @@ class SayCommandModal(discord.ui.Modal):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        text = self.children[0].value
+        textToObjects = {}
         for channel in interaction.client.get_all_channels():
-            channelName = "#" + channel.name
-            if channelName in text:
-                text = text.replace(channelName, channel.mention)
+            textToObjects[f"#{channel.name}"] = channel.mention
         for member in interaction.client.get_all_members():
-            memberName = "@" + member.name
-            if memberName in text:
-                text = text.replace(memberName, member.mention)
-        for role in await interaction.client.get_guild(
-            settings.DISCORD_GUILD_ID
-        ).fetch_roles():
+            textToObjects[f"@{member.name}"] = member.mention
+        for emoji in interaction.client.emojis:
+            textToObjects[f":{emoji.name}:"] = f"<:{emoji.name}:{emoji.id}>"
+        roles = await interaction.client.get_guild(
+            settings.DISCORD_GUILD_ID).fetch_roles()
+        for role in roles:
             if role.name.startswith("@"):
                 roleName = role.name
             else:
                 roleName = "@" + role.name
+            textToObjects[roleName] = role.mention
 
-            if roleName in text:
-                text = text.replace(roleName, role.mention)
+        names = sorted(textToObjects.keys(), key=lambda x: len(x), reverse=True)
+        regex = re.compile("(" + "|".join(names) + ")")
 
+        def stringToMention(match):
+            return textToObjects[match[0]]
+         
+
+        text = re.sub(regex, stringToMention, self.children[0].value)
         await interaction.channel.send(text)
         await interaction.response.send_message("Message was sent.", ephemeral=True)
 
